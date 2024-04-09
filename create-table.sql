@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS user;
 CREATE TABLE user (
-  id                INT AUTO_INCREMENT NOT NULL,
+  id                INT AUTO_INCREMENT  PRIMARY KEY,
   jobtitle          VARCHAR(128) NOT NULL,
   firstname         VARCHAR(128) NOT NULL,
   lastname          VARCHAR(128) NOT NULL,
@@ -16,8 +16,7 @@ CREATE TABLE user (
   workexperience    VARCHAR(128),
   education         VARCHAR(128),
   skills            VARCHAR(128),
-  languages         VARCHAR(128),
-  PRIMARY KEY (`id`)
+  languages         VARCHAR(128)
 );
 
 INSERT INTO user

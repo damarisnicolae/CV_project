@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/go-sql-driver/mysql"
 )
@@ -44,6 +46,79 @@ func userByID(id int64) (User, error) {
 	return user, nil
 }
 
+func home(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+
+	if r.Method != "GET" {
+		w.WriteHeader(405)
+		w.Write([]byte("Method Not Allowed"))
+		return
+	}
+
+	w.Write([]byte("Welcome!"))
+}
+
+func showUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		w.WriteHeader(405)
+		w.Write([]byte("Method Not Allowed"))
+		return
+	}
+
+	id, err := strconv.Atoi(r.URL.Query().Get("id")) // to convert the string value to an integer
+	if err != nil || id < 1 {
+		http.NotFound(w, r)
+		return
+	}
+
+	fmt.Fprintf(w, "Display the user with ID %d", id)
+}
+
+func createUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(405)
+		w.Write([]byte("Method Not Allowed"))
+		return
+	}
+
+	w.Write([]byte("Create a new user"))
+}
+
+func updateUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "PUT" {
+		w.WriteHeader(405)
+		w.Write([]byte("Method Not Allowed"))
+		return
+	}
+
+	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+	if err != nil || id < 1 {
+		http.NotFound(w, r)
+		return
+	}
+
+	fmt.Fprintf(w, "Update the user with ID %d", id)
+}
+
+func deleteUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "DELETE" {
+		w.WriteHeader(405)
+		w.Write([]byte("Method Not Allowed"))
+		return
+	}
+
+	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+	if err != nil || id < 1 {
+		http.NotFound(w, r)
+		return
+	}
+
+	fmt.Fprintf(w, "Delete the user with ID %d", id)
+}
+
 
 func connectToDatabase() (*sql.DB, error) {
     cfg := mysql.Config{
@@ -54,6 +129,16 @@ func connectToDatabase() (*sql.DB, error) {
         DBName:               "users",
         AllowNativePasswords: true,
     }
+func main() {
+
+	cfg := mysql.Config{
+		User:                 os.Getenv("DBUSER"),
+		Passwd:               os.Getenv("DBPASS"),
+		Net:                  "tcp",
+		Addr:                 "127.0.0.1:3306",
+		DBName:               "users",
+		AllowNativePasswords: true,
+	}
 
     db, err := sql.Open("mysql", cfg.FormatDSN())
     if err != nil {
