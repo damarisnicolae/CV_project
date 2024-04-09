@@ -119,18 +119,7 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Delete the user with ID %d", id)
 }
 
-
 func connectToDatabase() (*sql.DB, error) {
-    cfg := mysql.Config{
-        User:                 os.Getenv("DBUSER"),
-        Passwd:               os.Getenv("DBPASS"),
-        Net:                  "tcp",
-        Addr:                 "127.0.0.1:3306",
-        DBName:               "users",
-        AllowNativePasswords: true,
-    }
-func main() {
-
 	cfg := mysql.Config{
 		User:                 os.Getenv("DBUSER"),
 		Passwd:               os.Getenv("DBPASS"),
@@ -140,31 +129,41 @@ func main() {
 		AllowNativePasswords: true,
 	}
 
-    db, err := sql.Open("mysql", cfg.FormatDSN())
-    if err != nil {
-        return nil, err
-    }
+	db, err := sql.Open("mysql", cfg.FormatDSN())
+	if err != nil {
+		return nil, err
+	}
 
-    if err := db.Ping(); err != nil {
-        db.Close()
-        return nil, err
-    }
+	if err := db.Ping(); err != nil {
+		db.Close()
+		return nil, err
+	}
 
-    fmt.Println("Connected to database!")
-    return db, nil
+	fmt.Println("Connected to database!")
+	return db, nil
 }
 
 func main() {
-    var err error
-    db, err = connectToDatabase()
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer db.Close()
+	var err error
+	db, err = connectToDatabase()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
 
-    user, err := userByID(1)
-    if err != nil {
-        log.Fatal(err)
-    }
-    fmt.Printf("User found: %v\n", user)
+	user, err := userByID(1)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("User found: %v\n", user)
+
+	http.HandleFunc("/", home)
+	http.HandleFunc("/user", showUser)
+	http.HandleFunc("/user/create", createUser)
+	http.HandleFunc("/user/update", updateUser)
+	http.HandleFunc("/user/delete", deleteUser)
+
+	log.Println("Starting server on :8080")
+	err2 := http.ListenAndServe(":8080", nil)
+	log.Fatal(err2)
 }
