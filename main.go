@@ -51,7 +51,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-
+	
 	if r.Method != "GET" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method Not Allowed"))
@@ -164,6 +164,8 @@ func main() {
 	http.HandleFunc("/user/delete", deleteUser)
 
 	log.Println("Starting server on :8080")
-	err2 := http.ListenAndServe(":8080", nil)
-	log.Fatal(err2)
+
+	if err := http.ListenAndServe(:8080, handler); err != nil {
+		return fmt.Errorf("listen and serve: %s\n", err)
+	}
 }
