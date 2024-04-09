@@ -44,32 +44,42 @@ func userByID(id int64) (User, error) {
 	return user, nil
 }
 
+
+func connectToDatabase() (*sql.DB, error) {
+    cfg := mysql.Config{
+        User:                 os.Getenv("DBUSER"),
+        Passwd:               os.Getenv("DBPASS"),
+        Net:                  "tcp",
+        Addr:                 "127.0.0.1:3306",
+        DBName:               "users",
+        AllowNativePasswords: true,
+    }
+
+    db, err := sql.Open("mysql", cfg.FormatDSN())
+    if err != nil {
+        return nil, err
+    }
+
+    if err := db.Ping(); err != nil {
+        db.Close()
+        return nil, err
+    }
+
+    fmt.Println("Connected to database!")
+    return db, nil
+}
+
 func main() {
-	cfg := mysql.Config{
-		User:                 os.Getenv("DBUSER"),
-		Passwd:               os.Getenv("DBPASS"),
-		Net:                  "tcp",
-		Addr:                 "127.0.0.1:3306",
-		DBName:               "users",
-		AllowNativePasswords: true,
-	}
+    var err error
+    db, err = connectToDatabase()
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer db.Close()
 
-	var err error
-	db, err = sql.Open("mysql", cfg.FormatDSN()) // to initialize the db variable, passing the return value of FormatDSN.
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	pingErr := db.Ping() // to confirm that the database/sql package can connect
-	if pingErr != nil {
-		log.Fatal(pingErr)
-	}
-	fmt.Println("Connected!")
-
-	user, err := userByID(1)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("User found: %v\n", user)
-
+    user, err := userByID(1)
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("User found: %v\n", user)
 }
