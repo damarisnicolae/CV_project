@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/go-sql-driver/mysql"
+	"github.com/gorilla/mux"
 )
 
 var db *sql.DB
@@ -51,12 +52,14 @@ func home(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	
+
 	if r.Method != "GET" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method Not Allowed"))
 		return
 	}
+
+	// TODO
 
 	w.Write([]byte("Welcome!"))
 }
@@ -74,6 +77,8 @@ func showUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO
+
 	fmt.Fprintf(w, "Display the user with ID %d", id)
 }
 
@@ -83,6 +88,8 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Method Not Allowed"))
 		return
 	}
+
+	// TODO
 
 	w.Write([]byte("Create a new user"))
 }
@@ -100,6 +107,8 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO
+
 	fmt.Fprintf(w, "Update the user with ID %d", id)
 }
 
@@ -116,12 +125,14 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO
+
 	fmt.Fprintf(w, "Delete the user with ID %d", id)
 }
 
 func connectToDatabase() (*sql.DB, error) {
 	cfg := mysql.Config{
-		User:                 os.Getenv("DBUSER"),
+		User:                 os.Getenv("DBUSER"), // TODO
 		Passwd:               os.Getenv("DBPASS"),
 		Net:                  "tcp",
 		Addr:                 "127.0.0.1:3306",
@@ -151,21 +162,18 @@ func main() {
 	}
 	defer db.Close()
 
-	user, err := userByID(1)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("User found: %v\n", user)
+	r := mux.NewRouter()
 
-	http.HandleFunc("/", home)
-	http.HandleFunc("/user", showUser)
-	http.HandleFunc("/user/create", createUser)
-	http.HandleFunc("/user/update", updateUser)
-	http.HandleFunc("/user/delete", deleteUser)
+	r.HandleFunc("/", home).Methods("GET")
+	r.HandleFunc("/user/{id}", showUser).Methods("GET")
+	r.HandleFunc("/user/", createUser).Methods("POST")
+	r.HandleFunc("/user/{id}", updateUser).Methods("PUT")
+	r.HandleFunc("/user/{id}", deleteUser).Methods("DELETE")
+	http.Handle("/", r)
 
 	log.Println("Starting server on :8080")
 
-	if err := http.ListenAndServe(:8080, handler); err != nil {
-		return fmt.Errorf("listen and serve: %s\n", err)
+	if err := http.ListenAndServe(":8080", r); err != nil {
+		log.Fatalf("listen and serve: %s\n", err)
 	}
 }
