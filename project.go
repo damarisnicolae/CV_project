@@ -49,10 +49,10 @@ func userByID(id int64) (User, error) {
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
+	// if r.URL.Path != "/" {
+	// 	http.NotFound(w, r)
+	// 	return
+	// }
 
 	if r.Method != "GET" {
 		w.WriteHeader(405)
@@ -72,15 +72,9 @@ func showUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := strconv.Atoi(r.URL.Query().Get("id")) // to convert the string value to an integer
-	if err != nil || id < 1 {
-		http.NotFound(w, r)
-		return
-	}
-
 	// TODO
 
-	fmt.Fprintf(w, "Display the user with ID %d", id)
+	fmt.Fprintf(w, "Display the user with ID %d", 1)
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
@@ -143,6 +137,14 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Delete the user with ID %d", id)
 }
 
+func generateTemplate(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	template_id := query["template"]
+	user_id := query["user"]
+
+	fmt.Fprintf(w, "%s, %s", template_id, user_id)
+}
+
 func connectToDatabase() (*sql.DB, error) {
 	cfg := mysql.Config{
 		User:                 os.Getenv("DBUSER"), // TODO
@@ -178,11 +180,11 @@ func main() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", home).Methods("GET")
-	r.HandleFunc("/user/{id}", showUser).Methods("GET")
-	r.HandleFunc("/user/", createUser).Methods("POST")
+	r.HandleFunc("/user", showUser).Methods("GET")
+	r.HandleFunc("/user", createUser).Methods("POST")
 	r.HandleFunc("/user/{id}", updateUser).Methods("PUT")
 	r.HandleFunc("/user/{id}", deleteUser).Methods("DELETE")
-	http.Handle("/", r)
+	r.HandleFunc("/pdf", generateTemplate).Methods("GET")
 
 	log.Println("Starting server on :8080")
 
