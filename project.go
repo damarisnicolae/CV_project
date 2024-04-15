@@ -142,6 +142,15 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 	template_id := query["template"]
 	user_id := query["user"]
 
+	iduser_int := strconv.Atoi(user_id)
+	idtemplate_int := strconv.Atoi(template_id)
+
+	var user User
+
+	row1 := db.QueryRow("SELECT * FROM template WHERE id = ?", idtemplate_int)
+	row := db.QueryRow("SELECT * FROM user WHERE id = ?", iduser_int)
+	row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Adress, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
+
 	fmt.Fprintf(w, "%s, %s", template_id, user_id)
 }
 
