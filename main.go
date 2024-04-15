@@ -168,17 +168,14 @@ func main() {
 	}
 	defer db.Close()
 
-	user, err := userByID(1)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("User found: %v\n", user)
+	r := mux.NewRouter()
 
-	http.HandleFunc("/", home)
-	http.HandleFunc("/user", showUser)
-	http.HandleFunc("/user/create", createUser)
-	http.HandleFunc("/user/update", updateUser)
-	http.HandleFunc("/user/delete", deleteUser)
+	r.HandleFunc("/", home).Methods("GET")
+	r.HandleFunc("/user/{id}", showUser).Methods("POST")
+	r.HandleFunc("/user/", createUser).Methods("POST")
+	r.HandleFunc("/user/{id}", updateUser).Methods("PUT")
+	r.HandleFunc("/user/{id}", deleteUser).Methods("DELETE")
+	http.Handle("/", r)
 
 	log.Println("Starting server on :8080")
 
