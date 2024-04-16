@@ -22,7 +22,7 @@ type User struct {
 	Lastname       string
 	Email          string
 	Phone          string
-	Adress         string
+	Address        string
 	City           string
 	Country        string
 	Postalcode     string
@@ -33,19 +33,6 @@ type User struct {
 	Education      string
 	Skills         string
 	Languages      string
-}
-
-func userByID(id int64) (User, error) {
-	var user User
-
-	row := db.QueryRow("SELECT * FROM user WHERE id = ?", id)
-	if err := row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Adress, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages); err != nil {
-		if err == sql.ErrNoRows {
-			return user, fmt.Errorf("userById %d: no such user", id)
-		}
-		return user, fmt.Errorf("userById %d: %v", id, err)
-	}
-	return user, nil
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
@@ -72,9 +59,19 @@ func showUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO
+	var user User
+    row := db.QueryRow("SELECT * FROM user WHERE id = ?", id)
+    if err := row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages); err != nil {
+        if err == sql.ErrNoRows {
+            http.NotFound(w, r)
+            return
+        }
+        http.Error(w, fmt.Sprintf("Error fetching user data: %v", err), http.StatusInternalServerError)
+        return
+    }
 
-	fmt.Fprintf(w, "Display the user with ID %d", 1)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +88,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err := db.Exec("INSERT INTO users (Jobtitle, Firstname, Lastname, Email, Phone, Address, City, Country, Postalcode, Dateofbirth, Nationality, Summary, Workexperience, Education, Skills, Languages) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		user.Jobtitle, user.Firstname, user.Lastname, user.Email, user.Phone, user.Adress, user.City, user.Country, user.Postalcode, user.Dateofbirth, user.Nationality, user.Summary, user.Workexperience, user.Education, user.Skills, user.Languages)
+		user.Jobtitle, user.Firstname, user.Lastname, user.Email, user.Phone, user.Address, user.City, user.Country, user.Postalcode, user.Dateofbirth, user.Nationality, user.Summary, user.Workexperience, user.Education, user.Skills, user.Languages)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -126,15 +123,35 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := strconv.Atoi(r.URL.Query().Get("id"))
-	if err != nil || id < 1 {
-		http.NotFound(w, r)
-		return
-	}
+	userID := r.URL.Query().Get("id")
+    if userID == "" {
+        http.NotFound(w, r)
+        return
+    }
 
-	// TODO
+	id, err := strconv.ParseInt(userID, 10, 64)
+    if err != nil || id < 1 {
+        w.WriteHeader(http.StatusNotFound)
+        fmt.Fprintf(w, "ID should be a integer")
+        return
+    }
 
-	fmt.Fprintf(w, "Delete the user with ID %d", id)
+	stmt, err := db.Prepare("DELETE FROM users WHERE id = ?")
+    if err != nil {
+        w.WriteHeader(http.StatusInternalServerError)
+        fmt.Fprintf(w, "Error preparing delete statement: %v", err)
+        return
+    }
+    defer stmt.Close()
+
+	_, err = stmt.Exec(id)
+    if err != nil {
+        w.WriteHeader(http.StatusInternalServerError)
+        fmt.Fprintf(w, "Error executing delete statement: %v", err)
+        return
+    }
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func generateTemplate(w http.ResponseWriter, r *http.Request) {
