@@ -8,9 +8,12 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
+
+	wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 )
 
 var db *sql.DB
@@ -159,14 +162,49 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 	template_id := query["template"]
 	user_id := query["user"]
 
-	iduser_int := strconv.Atoi(user_id)
-	idtemplate_int := strconv.Atoi(template_id)
+	iduser_int, err := strconv.Atoi(user_id[0])
+	if err != nil {
+		log.Printf("Failed to convert user_id to integer: %v", err)
+		return
+	}
+
+	idtemplate_int, err := strconv.Atoi(template_id[0])
+	if err != nil {
+		log.Printf("Failed to convert user_id to integer: %v", err)
+		return
+	}
 
 	var user User
 
-	row1 := db.QueryRow("SELECT * FROM template WHERE id = ?", idtemplate_int)
+	row1 := db.QueryRow("SELECT Path FROM template WHERE id = ?", idtemplate_int)
 	row := db.QueryRow("SELECT * FROM user WHERE id = ?", iduser_int)
-	row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Adress, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
+	row.Scan(&user)
+	// (&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Adress, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
+
+	pdfg, err := wkhtml.NewPDFGenerator()
+	if err != nil {
+		return
+	}
+
+	htmlStr := `<html>
+	<body>
+	<h1 style="color:red;">This is an html from pdf to test color<h1>
+	</body>
+	</html>`
+
+	pdfg.AddPage(wkhtml.NewPageReader(strings.NewReader(htmlStr)))
+
+	err = pdfg.Create()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = pdfg.WriteFile("./exemple.pdf")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Done PDF")
 
 	fmt.Fprintf(w, "%s, %s", template_id, user_id)
 }
