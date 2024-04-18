@@ -36,10 +36,6 @@ type User struct {
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
-	// if r.URL.Path != "/" {
-	// 	http.NotFound(w, r)
-	// 	return
-	// }
 
 	if r.Method != "GET" {
 		w.WriteHeader(405)
@@ -47,9 +43,25 @@ func home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO
+	rows, err := db.Query("SELECT id, jobtitle, firstname, lastname, email, phone, address, city, country, postalcode, dateofbirth, nationality, summary, workexperience, education, skills, languages FROM users")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
 
-	w.Write([]byte("Welcome!"))
+	var users []User
+
+	for rows.Next() {
+		var user User
+		err := rows.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
+		if err != nil {
+			log.Fatal(err)
+		}
+		users = append(users, user)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
 }
 
 func showUser(w http.ResponseWriter, r *http.Request) {
@@ -111,9 +123,24 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO
+	var user User
+	err = json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 
-	fmt.Fprintf(w, "Update the user with ID %d", id)
+	_, err = db.Exec("UPDATE users SET jobtitle=?, first_name=?, last_name=?, email=?, phone=?, address=?, city=?, country=?, postal_code=?, date_of_birth=?, nationality=?, summary=?, work_experience=?, education=?, skills=?, languages=? WHERE id=?", 
+		user.Jobtitle, user.Firstname, user.Lastname, user.Email, user.Phone, user.Address, user.City, user.Country, user.Postalcode, user.Dateofbirth, user.Nationality, user.Summary, user.Workexperience, user.Education, user.Skills, user.Languages, id)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	user.ID = int64(id)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
 }
 
 func deleteUser(w http.ResponseWriter, r *http.Request) {
