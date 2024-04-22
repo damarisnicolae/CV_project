@@ -35,18 +35,46 @@ type User struct {
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
+<<<<<<< HEAD:main.go
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
 	}
 	
+=======
+>>>>>>> 0271937 (CRUD finished):project.go
 	if r.Method != "GET" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method Not Allowed"))
 		return
 	}
 
+<<<<<<< HEAD:main.go
 	w.Write([]byte("Welcome!"))
+=======
+	var users []User
+    rows, err := db.Query("SELECT id, jobtitle, firstname, lastname, email, phone, address, city, country, postalcode, dateofbirth, nationality, summary, workexperience, education, skills, languages FROM users")
+    if err != nil {
+        http.Error(w, fmt.Sprintf("Error fetching users: %v", err), http.StatusInternalServerError)
+        return
+    }
+    defer rows.Close()
+
+	for rows.Next() {
+        var user User
+        if err := rows.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages); err != nil {
+            http.Error(w, fmt.Sprintf("Error scanning user: %v", err), http.StatusInternalServerError)
+            return
+        }
+        users = append(users, user)
+    }
+
+	w.Header().Set("Content-Type", "application/json")
+    if err := json.NewEncoder(w).Encode(users); err != nil {
+        http.Error(w, fmt.Sprintf("Error encoding users: %v", err), http.StatusInternalServerError)
+        return
+    }
+>>>>>>> 0271937 (CRUD finished):project.go
 }
 
 func showUser(w http.ResponseWriter, r *http.Request) {
@@ -56,11 +84,20 @@ func showUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+<<<<<<< HEAD:main.go
 	id, err := strconv.Atoi(r.URL.Query().Get("id")) // to convert the string value to an integer
 	if err != nil || id < 1 {
 		http.NotFound(w, r)
 		return
 	}
+=======
+	params := mux.Vars(r)
+    id, err := strconv.Atoi(params["id"])
+    if err != nil {
+        http.Error(w, "Invalid user ID", http.StatusBadRequest)
+        return
+    }
+>>>>>>> 0271937 (CRUD finished):project.go
 
 	var user User
     row := db.QueryRow("SELECT * FROM user WHERE id = ?", id)
@@ -99,9 +136,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("User created successfully"))
-
 }
-
 
 func updateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "PUT" {
@@ -116,7 +151,28 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+<<<<<<< HEAD:main.go
 	fmt.Fprintf(w, "Update the user with ID %d", id)
+=======
+	var user User
+    err = json.NewDecoder(r.Body).Decode(&user)
+    if err != nil {
+        http.Error(w, "Bad Request", http.StatusBadRequest)
+        return
+    }
+
+    _, err = db.Exec("INSERT INTO users (Jobtitle, Firstname, Lastname, Email, Phone, Address, City, Country, Postalcode, Dateofbirth, Nationality, Summary, Workexperience, Education, Skills) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        user.Jobtitle, user.Firstname, user.Lastname, user.Email, user.Phone, user.Address, user.City, user.Country, user.Postalcode, user.Dateofbirth, user.Nationality, user.Summary, user.Workexperience, user.Education, user.Skills)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    user.ID = int64(id)
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(user)
+>>>>>>> 0271937 (CRUD finished):project.go
 }
 
 func deleteUser(w http.ResponseWriter, r *http.Request) {
@@ -157,6 +213,26 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+<<<<<<< HEAD:main.go
+=======
+func generateTemplate(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	template_id := query["template"]
+	user_id := query["user"]
+
+	iduser_int := strconv.Atoi(user_id)
+	idtemplate_int := strconv.Atoi(template_id)
+
+	var user User
+
+	row1 := db.QueryRow("SELECT * FROM template WHERE id = ?", idtemplate_int)
+	row := db.QueryRow("SELECT * FROM user WHERE id = ?", iduser_int)
+	row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
+
+	fmt.Fprintf(w, "%s, %s", template_id, user_id)
+}
+
+>>>>>>> 0271937 (CRUD finished):project.go
 func connectToDatabase() (*sql.DB, error) {
 	cfg := mysql.Config{
 		User:                 os.Getenv("DBUSER"),
