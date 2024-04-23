@@ -8,9 +8,14 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
+	"io/ioutil"
+	"bytes"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
+
+	wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 )
 
 var db *sql.DB
@@ -33,6 +38,11 @@ type User struct {
 	Education      string
 	Skills         string
 	Languages      string
+}
+
+type Template struct {
+	Id 	 int64
+	Path string
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
@@ -72,7 +82,7 @@ func showUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user User
-    row := db.QueryRow("SELECT * FROM user WHERE id = ?", id)
+    row := db.QueryRow("SELECT * FROM user WHERE id = ?", 1)
     if err := row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages); err != nil {
         if err == sql.ErrNoRows {
             http.NotFound(w, r)
@@ -186,14 +196,74 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 	template_id := query["template"]
 	user_id := query["user"]
 
-	iduser_int := strconv.Atoi(user_id)
-	idtemplate_int := strconv.Atoi(template_id)
+	iduser_int, err := strconv.Atoi(user_id[0])
+	if err != nil {
+        fmt.Println(err)
+    }
+
+	idtemplate_int, err := strconv.Atoi(template_id[0])
+	if err != nil {
+        fmt.Println(err)
+    }
 
 	var user User
+	var template Template
 
-	row1 := db.QueryRow("SELECT * FROM template WHERE id = ?", idtemplate_int)
+	row1 := db.QueryRow("SELECT Path FROM template WHERE id = ?", idtemplate_int)
+	row1.Scan(&template.Path)
 	row := db.QueryRow("SELECT * FROM user WHERE id = ?", iduser_int)
-	row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Adress, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
+	row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
+
+	htmlContent, err := ioutil.ReadFile(template.Path)
+    if err != nil {
+        panic(err)
+    }
+
+	htmlString := string(htmlContent)
+
+	htmlString = strings.ReplaceAll(htmlString, "{{Firstname}}", user.Firstname)
+	htmlString = strings.ReplaceAll(htmlString, "{{Lastname}}", user.Lastname)
+	htmlString = strings.ReplaceAll(htmlString, "{{Jobtitle}}", user.Jobtitle)
+	htmlString = strings.ReplaceAll(htmlString, "{{Email}}", user.Email)
+	htmlString = strings.ReplaceAll(htmlString, "{{Phone}}", user.Phone)
+	htmlString = strings.ReplaceAll(htmlString, "{{Address}}", user.Address)
+	htmlString = strings.ReplaceAll(htmlString, "{{City}}", user.City)
+	htmlString = strings.ReplaceAll(htmlString, "{{Country}}", user.Country)
+	htmlString = strings.ReplaceAll(htmlString, "{{Postalcode}}", user.Postalcode)
+	htmlString = strings.ReplaceAll(htmlString, "{{Dateofbirth}}", user.Dateofbirth)
+	htmlString = strings.ReplaceAll(htmlString, "{{Nationality}}", user.Nationality)
+	htmlString = strings.ReplaceAll(htmlString, "{{Summary}}", user.Summary)
+	htmlString = strings.ReplaceAll(htmlString, "{{Workexperience}}", user.Workexperience)
+	htmlString = strings.ReplaceAll(htmlString, "{{Education}}", user.Education)
+	htmlString = strings.ReplaceAll(htmlString, "{{Skills}}", user.Skills)
+	htmlString = strings.ReplaceAll(htmlString, "{{Languages}}", user.Languages)
+
+	err = ioutil.WriteFile("populate_template.html", []byte(htmlString), 0644)
+    if err != nil {
+        panic(err)
+    }
+
+	populateHtml, err := ioutil.ReadFile("./populate_template.html")
+	if err != nil {
+        log.Fatal(err)
+    }
+
+	pdfg, err := wkhtml.NewPDFGenerator()
+	if err != nil {
+		return
+	}
+
+	pdfg.AddPage(wkhtml.NewPageReader(bytes.NewReader(populateHtml)))
+
+	err = pdfg.Create()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = pdfg.WriteFile("./example.pdf")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	fmt.Fprintf(w, "%s, %s", template_id, user_id)
 }
