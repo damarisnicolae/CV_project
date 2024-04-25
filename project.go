@@ -1,16 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
-	"io/ioutil"
-	"bytes"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -41,7 +41,7 @@ type User struct {
 }
 
 type Template struct {
-	Id 	 int64
+	Id   int64
 	Path string
 }
 
@@ -82,15 +82,15 @@ func showUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user User
-    row := db.QueryRow("SELECT * FROM user WHERE id = ?", 1)
-    if err := row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages); err != nil {
-        if err == sql.ErrNoRows {
-            http.NotFound(w, r)
-            return
-        }
-        http.Error(w, fmt.Sprintf("Error fetching user data: %v", err), http.StatusInternalServerError)
-        return
-    }
+	row := db.QueryRow("SELECT * FROM user WHERE id = ?", 1)
+	if err := row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages); err != nil {
+		if err == sql.ErrNoRows {
+			http.NotFound(w, r)
+			return
+		}
+		http.Error(w, fmt.Sprintf("Error fetching user data: %v", err), http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
@@ -161,32 +161,32 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := r.URL.Query().Get("id")
-    if userID == "" {
-        http.NotFound(w, r)
-        return
-    }
+	if userID == "" {
+		http.NotFound(w, r)
+		return
+	}
 
 	id, err := strconv.ParseInt(userID, 10, 64)
-    if err != nil || id < 1 {
-        w.WriteHeader(http.StatusNotFound)
-        fmt.Fprintf(w, "ID should be a integer")
-        return
-    }
+	if err != nil || id < 1 {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, "ID should be a integer")
+		return
+	}
 
 	stmt, err := db.Prepare("DELETE FROM users WHERE id = ?")
-    if err != nil {
-        w.WriteHeader(http.StatusInternalServerError)
-        fmt.Fprintf(w, "Error preparing delete statement: %v", err)
-        return
-    }
-    defer stmt.Close()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error preparing delete statement: %v", err)
+		return
+	}
+	defer stmt.Close()
 
 	_, err = stmt.Exec(id)
-    if err != nil {
-        w.WriteHeader(http.StatusInternalServerError)
-        fmt.Fprintf(w, "Error executing delete statement: %v", err)
-        return
-    }
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error executing delete statement: %v", err)
+		return
+	}
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -198,13 +198,13 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 
 	iduser_int, err := strconv.Atoi(user_id[0])
 	if err != nil {
-        fmt.Println(err)
-    }
+		fmt.Println(err)
+	}
 
 	idtemplate_int, err := strconv.Atoi(template_id[0])
 	if err != nil {
-        fmt.Println(err)
-    }
+		fmt.Println(err)
+	}
 
 	var user User
 	var template Template
@@ -215,9 +215,9 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 	row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
 
 	htmlContent, err := ioutil.ReadFile(template.Path)
-    if err != nil {
-        panic(err)
-    }
+	if err != nil {
+		panic(err)
+	}
 
 	htmlString := string(htmlContent)
 
@@ -238,15 +238,15 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 	htmlString = strings.ReplaceAll(htmlString, "{{Skills}}", user.Skills)
 	htmlString = strings.ReplaceAll(htmlString, "{{Languages}}", user.Languages)
 
-	err = ioutil.WriteFile("populate_template.html", []byte(htmlString), 0644)
-    if err != nil {
-        panic(err)
-    }
-
-	populateHtml, err := ioutil.ReadFile("./populate_template.html")
+	err = ioutil.WriteFile("/templates/populate_template.html", []byte(htmlString), 0644)
 	if err != nil {
-        log.Fatal(err)
-    }
+		panic(err)
+	}
+
+	populateHtml, err := ioutil.ReadFile("./templates/populate_template.html")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	pdfg, err := wkhtml.NewPDFGenerator()
 	if err != nil {
