@@ -1,16 +1,7 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, render_template
 import requests
 
 app = Flask(__name__)
-
-# get data of an user
-url = "http://localhost:8080/user"
-r = requests.get(url = url)
-data = r.json
-
-@app.route('/returnjson', methods = ['GET']) 
-def ReturnJSON():
-    return data 
 
 @app.route('/', methods = ['GET'])
 def home():
@@ -18,7 +9,10 @@ def home():
 
 @app.route('/template1', methods = ['GET'])
 def generate_template():
-    return render_template("template1.html")
+    url = "http://localhost:8080/user"
+    r = requests.get(url = url)
+    data = r.json()
+    return render_template("template1.html", data = data)
 
   
 if __name__=='__main__': 
