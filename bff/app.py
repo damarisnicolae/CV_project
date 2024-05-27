@@ -15,12 +15,12 @@ def home():
 @app.route('/template1', methods = ['GET'])
 def generate_template1():
     url = "http://localhost:8080/user"
-    # url2 = "http://localhost:8080/pdf?template=1&user=1" ####todo
+    url2 = "http://localhost:8080/pdf?template=1&user=1" ####todo
     
     r = requests.get(url = url)
     data = r.json()
     
-    # r2 = requests.get(url = url2) ####todo
+    r2 = requests.get(url = url2) ####todo
     
     return render_template("template1.html", data = data)
 
