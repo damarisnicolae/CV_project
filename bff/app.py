@@ -3,14 +3,13 @@ import requests
 
 app = Flask(__name__)
 
-users = [
-    {"id": 1, "firstname": "Sherlock", "lastname": "Holmes", "email": "sholmes@example.com"},
-    {"id": 2, "firstname": "Nicolae", "lastname": "Ceausescu", "email": "ceausescu_ro@example.com"}
-]
-
 @app.route('/', methods=['GET'])
 def home():
-    return render_template('home.html', users=users)
+    url = "http://localhost:8080/home"
+
+    u = requests.get(url = url)
+    data = u.json()
+    return render_template('home.html', data = data)
 
 @app.route('/template1', methods = ['GET'])
 def generate_template1():
