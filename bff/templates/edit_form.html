@@ -1,3 +1,50 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+    <form method="post" action="http://localhost:5000/actioneditform">
+        <label for="firstname">First name:</label>
+        <input type="text" name="Firstname" value={{data.Firstname}} /><br />
+        <label for="lastname">Last name:</label>
+        <input type="text" name="Lastname" value={{data.Lastname}} /><br />
+        <label for="Jobtitle">Job Title:</label>
+        <input type="text" name="Jobtitle" value={{data.Jobtitle}} /><br />
+        <label for="Email">Email:</label>
+        <input type="email" name="Email" value={{data.Email}} /><br />
+        <label for="Phone">Phone:</label>
+        <input type="text" name="Phone" value={{data.Phone}} /><br />
+        <label for="Adress">Adress:</label>
+        <input type="text" rows="5" name="Adress" value={{data.Address}} /><br />
+        <label for="City">City:</label>
+        <input type="text" name="City" value={{data.City}} /><br />
+        <label for="Country">Country:</label>
+        <input type="text" name="Country" value={{data.Country}} /><br />
+        <label for="Postalcode">Postalcode:</label>
+        <input type="text" name="Postalcode" value={{data.Postalcode}} /><br />
+        <label for="Dateofbirth">Dateofbirth:</label>
+        <input type="text" name="Dateofbirth" value={{data.Dateofbirth}} /><br />
+        <label for="Nationality">Nationality:</label>
+        <input type="text" name="Nationality" value={{data.Nationality}} /><br />
+        <label for="Summary">Summary:</label>
+        <input type="text" rows="5" name="Summary" value={{data.Summary}} /><br />
+        <label for="Workexperience">Workexperience:</label>
+        <input type="text" name="Workexperience" value={{data.Workexperience}} /><br />
+        <label for="Education">Education:</label>
+        <input type="text" name="Education" value={{data.Education}} /><br />
+        <label for="Skills">Skills:</label>
+        <input type="text" rows="5" name="Skills" value={{data.Skills}} /><br />
+        <label for="Languages">Languages:</label>
+        <input type="text" name="Languages" value={{data.Languages}} /><br />
+
+        <input type="submit" id="submit" value="Send data" />
+    </form>
+    <script>
+        submitButton = document.getElementById("submit")
+        submitButton.addEventListener("onclick", handleSubmitButton)
+    </script>
+</body>
+</html>
 <form method="post" action="http://localhost:5000/actioneditform">
     <label for="firstname">First name:</label>
     <input type="text" name="Firstname" value={{data.Firstname}} /><br />

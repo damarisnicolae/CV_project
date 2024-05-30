@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -242,7 +241,7 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 	row := db.QueryRow("SELECT * FROM user WHERE id = ?", iduser_int)
 	row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
 
-	htmlContent, err := ioutil.ReadFile(template.Path)
+	htmlContent, err := os.ReadFile(template.Path)
 	if err != nil {
 		panic(err)
 	}
@@ -266,12 +265,12 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 	htmlString = strings.ReplaceAll(htmlString, "{{Skills}}", user.Skills)
 	htmlString = strings.ReplaceAll(htmlString, "{{Languages}}", user.Languages)
 
-	err = ioutil.WriteFile("/templates/populate_template.html", []byte(htmlString), 0644)
+	err = os.WriteFile("../bff/templates/populate_template.html", []byte(htmlString), 0644)
 	if err != nil {
 		panic(err)
 	}
 
-	populateHtml, err := ioutil.ReadFile("./templates/populate_template.html")
+	populateHtml, err := os.ReadFile("../bff/templates/populate_template.html")
 	if err != nil {
 		log.Fatal(err)
 	}
