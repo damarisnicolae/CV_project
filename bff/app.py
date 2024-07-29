@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
 def home():
-    url = "http://localhost:8080/home"
+    url = "http://localhost:8080/homeuser"
 
     u = requests.get(url = url)
     data = u.json()

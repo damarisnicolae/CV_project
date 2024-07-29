@@ -5,12 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Users</title>
     <link rel="stylesheet" href="../css/users.css"> 
+
+<script>
+    function deleteUser(userId) {
+        fetch(`/user/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert("User deleted successfully");
+                window.location.reload();
+            } else {
+                throw new Error('User deletion failed');
+            }
+        })
+        .catch(error => {
+            alert("Error deleting user");
+            console.error('There was a problem with the fetch operation:', error.message);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.delete-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.getAttribute('data-user-id');
+                deleteUser(userId);
+            });
+        });
+    });
+</script>
 </head>
 <body>
 
 <div class="table-container">
     <input type="text" id="searchInput" placeholder="Search for users..">
     <a href="/add_user" class="add-button">ADD</a> 
+
+    <button onclick="deleteUser()">Click me</button>
+
     <table id="userTable">
         <thead>
             <tr>
@@ -29,7 +70,7 @@
                 <td>{{ data.email }}</td>
                 <td>
                     <input type="hidden" class="userId" value="{{ user.id }}">
-                    <button class="delete-button">DELETE</button>
+                    <button class="delete-button" data-user-id="{{user.id}}">DELETE</button>
                     <button class="update-button">UPDATE</button>
                 </td>
             </tr>

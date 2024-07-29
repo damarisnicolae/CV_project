@@ -44,6 +44,32 @@ type Template struct {
 	Path string
 }
 
+func HomeUsers(w http.ResponseWriter, r *http.Request){
+	if r.Method != "GET" {
+		w.WriteHeader(405)
+		w.Write([]byte("Method Not Allowed"))
+		return
+	}
+
+	var users []User
+	rows, err := db.Query("SELECT id, firstname, lastname, email FROM users")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var user User
+		err := rows.Scan(&user.ID, &user.Firstname, &user.Lastname, &user.email)
+		if err != nil {
+			log.Fatal(err)
+		}
+		users = append(users, user)
+	}
+w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
+}
+
 func home(w http.ResponseWriter, r *http.Request) {
 <<<<<<< HEAD:project.go
 =======
@@ -64,6 +90,15 @@ func home(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	defer rows.Close()
+
+	for rows.Next() {
+		var user User
+		err := rows.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
+		if err != nil {
+			log.Fatal(err)
+		}
+		users = append(users, user)
+	}
 
 <<<<<<< HEAD:project.go
 =======
@@ -330,6 +365,7 @@ func main() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", home).Methods("GET")
+	r.HandleFunc("/users", HomeUsers).Methods("GET")
 	r.HandleFunc("/user", showUser).Methods("GET")
 	r.HandleFunc("/user", createUser).Methods("POST")
 	r.HandleFunc("/user/{id}", updateUser).Methods("PUT")
