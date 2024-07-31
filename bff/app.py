@@ -5,22 +5,11 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
 def home():
-<<<<<<< HEAD
-    url = "http://localhost:8080/homeuser"
-
-    u = requests.get(url = url)
-    data = u.json()
-    return render_template('home.html', data = data)
-=======
     url = "http://localhost:8080/home"
 
     u = requests.get(url = url)
     data = u.json()
     return render_template('home.html', users = data)
-
-# @app.route('/<id>', methods=['GET'])
-# def home2(id):
-#     return render_template('home.html', users=users)
 
 @app.route('/user', methods = ['POST'])
 def add_user():
@@ -44,7 +33,6 @@ def edit_user():
     requests.put(url, data=json.dumps(edited_data), headers=headers)
     
     return render_template('home.html')
->>>>>>> b2d7e71 (Work in progress at login)
 
 @app.route('/template1', methods = ['GET'])
 def generate_template1():

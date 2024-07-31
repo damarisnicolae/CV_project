@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
-	"time"
+	"unicode/utf8"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -46,13 +48,24 @@ type Template struct {
 }
 
 type UserLogin struct {
-	ID 			   int
-	Name		   string
-	Email     	   string
-	HashedPassword []byte
+	ID             int
+	Name           string
+	Email          string
+	HashedPassword string
 }
 
-func HomeUsers(w http.ResponseWriter, r *http.Request){
+type errors map[string][]string
+
+func (e errors) Add(field, message string) {
+	e[field] = append(e[field], message)
+}
+
+type Form struct {
+	url.Values
+	Errors errors
+}
+
+func HomeUsers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method Not Allowed"))
@@ -68,13 +81,13 @@ func HomeUsers(w http.ResponseWriter, r *http.Request){
 
 	for rows.Next() {
 		var user User
-		err := rows.Scan(&user.ID, &user.Firstname, &user.Lastname, &user.email)
+		err := rows.Scan(&user.ID, &user.Firstname, &user.Lastname, &user.Email)
 		if err != nil {
 			log.Fatal(err)
 		}
 		users = append(users, user)
 	}
-w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(users)
 }
 
@@ -85,28 +98,14 @@ func home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var users []User
-
 	rows, err := db.Query("SELECT id, jobtitle, firstname, lastname, email, phone, address, city, country, postalcode, dateofbirth, nationality, summary, workexperience, education, skills, languages FROM users")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer rows.Close()
 
-	for rows.Next() {
-		var user User
-		err := rows.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
-		if err != nil {
-			log.Fatal(err)
-		}
-		users = append(users, user)
-	}
-
-<<<<<<< HEAD:project.go
-=======
 	var users []User
 
->>>>>>> 1a8974f385c67f1a1622514aaa89ee36ab720afb:api/main.go
 	for rows.Next() {
 		var user User
 		err := rows.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
@@ -314,7 +313,7 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s, %s", template_id, user_id)
 }
 
-func MinLength(field string, d int) {
+func (f *Form) MinLength(field string, d int) {
 	value := f.Get(field)
 	if value == "" {
 		return
@@ -326,7 +325,7 @@ func MinLength(field string, d int) {
 
 var EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
-func MatchesPattern(field string, pattern *regexp.Regexp) {
+func (f *Form) MatchesPattern(field string, pattern *regexp.Regexp) {
 	value := f.Get(field)
 	if value == "" {
 		return
@@ -338,9 +337,11 @@ func MatchesPattern(field string, pattern *regexp.Regexp) {
 
 func loginuser(w http.ResponseWriter, r *http.Request) {
 	user := UserLogin{
-		Email:    r.FormValue("email"),
-		Password: r.FormValue("password")
+		Email:          r.FormValue("email"),
+		HashedPassword: r.FormValue("password"),
 	}
+
+	//TODO
 }
 
 func connectToDatabase() (*sql.DB, error) {
