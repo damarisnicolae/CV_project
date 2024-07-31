@@ -72,7 +72,7 @@ def loginuser():
         return render_template('loginform.html')
     if request.method == "POST":
         r = requests.post(f'http://localhost:8080/user', request.form, headers=request.headers)
-        response_json = r.json()
-
+        data = r.json()
+        return render_template('greet.html', data = data)
 if __name__=='__main__': 
     app.run(debug=True)

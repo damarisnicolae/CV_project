@@ -7,15 +7,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
 
 	wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 )
@@ -47,22 +45,49 @@ type Template struct {
 	Path string
 }
 
-type UserLogin struct {
-	ID             int
-	Name           string
-	Email          string
-	HashedPassword string
+func insertUser(username, password string) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec("INSERT INTO userlogin (username, password) VALUES (?,?)", username, hashedPassword)
+	return err
 }
 
-type errors map[string][]string
+func verifyLogin(username, password string) bool {
+	var hashedPassword string
+	err := db.QueryRow("SELECT password FROM userlogin WHERE username = ?", username).Scan(&hashedPassword)
+	if err != nil {
+		return false
+	}
 
-func (e errors) Add(field, message string) {
-	e[field] = append(e[field], message)
+	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	return err == nil
 }
 
-type Form struct {
-	url.Values
-	Errors errors
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	username := strings.TrimSpace(r.Form.Get("username"))
+	password := r.Form.Get("password")
+
+	response := struct {
+		Username string `json:"username"`
+	}{
+		Username: username,
+	}
+
+	if verifyLogin(username, password) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
+	}
+
 }
 
 func HomeUsers(w http.ResponseWriter, r *http.Request) {
@@ -313,37 +338,6 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s, %s", template_id, user_id)
 }
 
-func (f *Form) MinLength(field string, d int) {
-	value := f.Get(field)
-	if value == "" {
-		return
-	}
-	if utf8.RuneCountInString(value) < d {
-		f.Errors.Add(field, fmt.Sprintf("This field is too short (minimum is %d characters)", d))
-	}
-}
-
-var EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-
-func (f *Form) MatchesPattern(field string, pattern *regexp.Regexp) {
-	value := f.Get(field)
-	if value == "" {
-		return
-	}
-	if !pattern.MatchString(value) {
-		f.Errors.Add(field, "This field is invalid")
-	}
-}
-
-func loginuser(w http.ResponseWriter, r *http.Request) {
-	user := UserLogin{
-		Email:          r.FormValue("email"),
-		HashedPassword: r.FormValue("password"),
-	}
-
-	//TODO
-}
-
 func connectToDatabase() (*sql.DB, error) {
 	cfg := mysql.Config{
 		User:                 os.Getenv("DBUSER"), // TODO
@@ -385,7 +379,7 @@ func main() {
 	r.HandleFunc("/user/{id}", updateUser).Methods("PUT")
 	r.HandleFunc("/user/{id}", deleteUser).Methods("DELETE")
 	r.HandleFunc("/pdf", generateTemplate).Methods("GET")
-	r.HandleFunc("/loginuser", loginuser).Methods("POST")
+	r.HandleFunc("/loginuser", loginHandler).Methods("POST")
 
 	log.Println("Starting server on :8080")
 

@@ -5,8 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Users</title>
     <link rel="stylesheet" href="../css/users.css"> 
+</head>
+<body>
 
+<div class="table-container">
+    <input type="text" id="searchInput" placeholder="Search for users..">
+    <a href="/add_user" class="add-button">ADD</a> 
+
+    <table id="userTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Firstname</th>
+                <th>Lastname</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ data.id }}</td>
+                <td>{{ data.firstname }}</td>
+                <td>{{ data.lastname }}</td>
+                <td>{{ data.email }}</td>
+                <td>
+                    <input type="hidden" class="userId" value="{{ user.id }}">
+                    <button onclick="deleteUser({{user.id}})" id="delete-button">DELETE</button>
+                    <button onclick="updateUser({{user.id}})" id="update-button">UPDATE</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</body>
 <script>
+    function updateUser(userId) {
+        fetch(`http://localhost:5000/user/${userId}`)
+        .then(res => {console.log(res)})
+        .catch(error => {console.log(error)})
+    }
+
     function deleteUser(userId) {
         fetch(`/user/${userId}`, {
             method: 'DELETE',
@@ -42,53 +81,5 @@
             });
         });
     });
-</script>
-</head>
-<body>
-
-<div class="table-container">
-    <input type="text" id="searchInput" placeholder="Search for users..">
-    <a href="/add_user" class="add-button">ADD</a> 
-
-    <button onclick="deleteUser()">Click me</button>
-
-    <table id="userTable">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Firstname</th>
-                <th>Lastname</th>
-                <th>Email</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in users %}
-            <tr>
-                <td>{{ data.id }}</td>
-                <td>{{ data.firstname }}</td>
-                <td>{{ data.lastname }}</td>
-                <td>{{ data.email }}</td>
-                <td>
-                    <input type="hidden" class="userId" value="{{ user.id }}">
-<<<<<<< HEAD
-                    <button class="delete-button" data-user-id="{{user.id}}">DELETE</button>
-                    <button class="update-button">UPDATE</button>
-=======
-                    <button onclick="updateUser({{user.id}})" id="delete-button">DELETE</button>
-                    <button id="update-button">UPDATE</button>
->>>>>>> b2d7e71 (Work in progress at login)
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-</body>
-<script>
-    function updateUser(userId) {
-        fetch(`http://localhost:5000/user/${userId}`)
-        .then(res => {console.log(res)})
-        .catch(error => {console.log(error)})
-    }
 </script>
 </html>
