@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -44,6 +45,13 @@ type Template struct {
 	Path string
 }
 
+type UserLogin struct {
+	ID 			   int
+	Name		   string
+	Email     	   string
+	HashedPassword []byte
+}
+
 func HomeUsers(w http.ResponseWriter, r *http.Request){
 	if r.Method != "GET" {
 		w.WriteHeader(405)
@@ -71,20 +79,14 @@ w.Header().Set("Content-Type", "application/json")
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
-<<<<<<< HEAD:project.go
-=======
-
->>>>>>> 1a8974f385c67f1a1622514aaa89ee36ab720afb:api/main.go
 	if r.Method != "GET" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method Not Allowed"))
 		return
 	}
 
-<<<<<<< HEAD:project.go
 	var users []User
-=======
->>>>>>> 1a8974f385c67f1a1622514aaa89ee36ab720afb:api/main.go
+
 	rows, err := db.Query("SELECT id, jobtitle, firstname, lastname, email, phone, address, city, country, postalcode, dateofbirth, nationality, summary, workexperience, education, skills, languages FROM users")
 	if err != nil {
 		log.Fatal(err)
@@ -180,23 +182,6 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	var user User
 	err = json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-<<<<<<< HEAD:project.go
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	_, err = db.Exec("UPDATE users SET jobtitle = ?, firstname = ?, lastname = ?, email = ?, phone = ?, address = ?, city = ?, country = ?, postalcode = ?, dateofbirth = ?, nationality = ?, summary = ?, workexperience = ?, education = ?, skills = ?, languages = ? WHERE id = ?", 
-		user.Jobtitle, user.Firstname, user.Lastname, user.Email, user.Phone, user.Address, user.City, user.Country, user.Postalcode, user.Dateofbirth, user.Nationality, user.Summary, user.Workexperience, user.Education, user.Skills, user.Languages, id)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	user.ID = int64(id)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
-
-=======
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
@@ -212,7 +197,6 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
->>>>>>> 1a8974f385c67f1a1622514aaa89ee36ab720afb:api/main.go
 }
 
 func deleteUser(w http.ResponseWriter, r *http.Request) {
@@ -330,6 +314,35 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s, %s", template_id, user_id)
 }
 
+func MinLength(field string, d int) {
+	value := f.Get(field)
+	if value == "" {
+		return
+	}
+	if utf8.RuneCountInString(value) < d {
+		f.Errors.Add(field, fmt.Sprintf("This field is too short (minimum is %d characters)", d))
+	}
+}
+
+var EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+
+func MatchesPattern(field string, pattern *regexp.Regexp) {
+	value := f.Get(field)
+	if value == "" {
+		return
+	}
+	if !pattern.MatchString(value) {
+		f.Errors.Add(field, "This field is invalid")
+	}
+}
+
+func loginuser(w http.ResponseWriter, r *http.Request) {
+	user := UserLogin{
+		Email:    r.FormValue("email"),
+		Password: r.FormValue("password")
+	}
+}
+
 func connectToDatabase() (*sql.DB, error) {
 	cfg := mysql.Config{
 		User:                 os.Getenv("DBUSER"), // TODO
@@ -371,6 +384,7 @@ func main() {
 	r.HandleFunc("/user/{id}", updateUser).Methods("PUT")
 	r.HandleFunc("/user/{id}", deleteUser).Methods("DELETE")
 	r.HandleFunc("/pdf", generateTemplate).Methods("GET")
+	r.HandleFunc("/loginuser", loginuser).Methods("POST")
 
 	log.Println("Starting server on :8080")
 

@@ -1,15 +1,50 @@
-from flask import Flask, render_template
-import requests
+from flask import Flask, render_template, request
+import requests, json
 
 app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
 def home():
+<<<<<<< HEAD
     url = "http://localhost:8080/homeuser"
 
     u = requests.get(url = url)
     data = u.json()
     return render_template('home.html', data = data)
+=======
+    url = "http://localhost:8080/home"
+
+    u = requests.get(url = url)
+    data = u.json()
+    return render_template('home.html', users = data)
+
+# @app.route('/<id>', methods=['GET'])
+# def home2(id):
+#     return render_template('home.html', users=users)
+
+@app.route('/user', methods = ['POST'])
+def add_user():
+    url = "http://localhost:8080/user"
+    requests.post(url = url)
+    return render_template('home.html')
+
+@app.route('/user', methods = ['GET'])
+def get_user():
+    url = "http://localhost:8080/user"
+    u = requests.get(url = url)
+    data = u.json()
+    return render_template('edit_form.html', data = data)
+
+@app.route('/user', methods = ['PUT'])
+def edit_user():
+    edited_data = request.json
+    
+    url = "http://localhost:8080/user/1"
+    headers = {"Content-Type": "application/json"}
+    requests.put(url, data=json.dumps(edited_data), headers=headers)
+    
+    return render_template('home.html')
+>>>>>>> b2d7e71 (Work in progress at login)
 
 @app.route('/template1', methods = ['GET'])
 def generate_template1():
@@ -42,6 +77,14 @@ def generate_template3():
     data = r.json()
     
     return render_template("template3.html", data = data)
+
+@app.route('/userlogin', methods = ['GET','POST'])
+def loginuser():
+    if request.method == "GET":
+        return render_template('loginform.html')
+    if request.method == "POST":
+        r = requests.post(f'http://localhost:8080/user', request.form, headers=request.headers)
+        response_json = r.json()
 
 if __name__=='__main__': 
     app.run(debug=True)
