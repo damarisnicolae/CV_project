@@ -90,7 +90,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func HomeUsers(w http.ResponseWriter, r *http.Request) {
+func homeUsers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method Not Allowed"))
@@ -98,7 +98,7 @@ func HomeUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var users []User
-	rows, err := db.Query("SELECT id, firstname, lastname, email FROM users")
+	rows, err := db.Query("SELECT id, firstname, lastname, email FROM user")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -373,7 +373,7 @@ func main() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", home).Methods("GET")
-	r.HandleFunc("/users", HomeUsers).Methods("GET")
+	r.HandleFunc("/users", homeUsers).Methods("GET")
 	r.HandleFunc("/user", showUser).Methods("GET")
 	r.HandleFunc("/user", createUser).Methods("POST")
 	r.HandleFunc("/user/{id}", updateUser).Methods("PUT")

@@ -10,7 +10,7 @@
 
 <div class="table-container">
     <input type="text" id="searchInput" placeholder="Search for users..">
-    <a href="/add_user" class="add-button">ADD</a> 
+    <a href="/adduser" class="add-button">ADD</a> 
 
     <table id="userTable">
         <thead>
@@ -24,10 +24,10 @@
         <tbody>
             {% for user in users %}
             <tr>
-                <td>{{ data.id }}</td>
-                <td>{{ data.firstname }}</td>
-                <td>{{ data.lastname }}</td>
-                <td>{{ data.email }}</td>
+                <td>{{ user.id }}</td>
+                <td>{{ user.firstname }}</td>
+                <td>{{ user.lastname }}</td>
+                <td>{{ user.email }}</td>
                 <td>
                     <input type="hidden" class="userId" value="{{ user.id }}">
                     <button onclick="deleteUser({{user.id}})" id="delete-button">DELETE</button>
@@ -41,7 +41,7 @@
 </body>
 <script>
     function updateUser(userId) {
-        fetch(`http://localhost:5000/user/${userId}`)
+        fetch(`/user/${userId}`)
         .then(res => {console.log(res)})
         .catch(error => {console.log(error)})
     }
