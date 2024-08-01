@@ -7,6 +7,16 @@ app = Flask(__name__)
 def home():
     url = "http://localhost:8080/home"
 
+
+
+
+
+
+
+
+
+    
+
     u = requests.get(url = url)
     data = u.json()
     return render_template('home.html', users = data)
@@ -70,6 +80,17 @@ def generate_template3():
 def loginuser():
     if request.method == "GET":
         return render_template('loginform.html')
+    if request.method == "POST":
+        r = requests.post(f'http://localhost:8080/user', request.form, headers=request.headers)
+        data = r.json()
+        return render_template('greet.html', data = data)
+if __name__=='__main__': 
+    app.run(debug=True)
+
+@app.route('/usersignup', methods = ['GET','POST'])
+def signupuser():
+    if request.method == "GET":
+        return render_template('signupform.html')
     if request.method == "POST":
         r = requests.post(f'http://localhost:8080/user', request.form, headers=request.headers)
         data = r.json()
