@@ -90,6 +90,35 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func signUpHandler(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	email := strings.TrimSpace(r.Form.Get("email"))
+	password := r.Form.Get("password")
+
+	if email == "" || password == "" {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	response := struct {
+		Email string `json:"email"`
+	}{
+		Email: email,
+	}
+
+	if verifyLogin(username, password) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
+	}
+}
+
+
 func homeUsers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		w.WriteHeader(405)
