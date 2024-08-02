@@ -105,6 +105,7 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	
 	response := struct {
 		Email string `json:"email"`
 	}{
