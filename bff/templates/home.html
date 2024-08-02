@@ -10,7 +10,8 @@
 
 <div class="table-container">
     <input type="text" id="searchInput" placeholder="Search for users..">
-    <a href="/adduser" class="add-button">ADD</a> 
+
+    <a href="/form" class="add-button">ADD</a> 
 
     <table id="userTable">
         <thead>
@@ -37,6 +38,10 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <a href="/login" class="login-button">LOGIN</a>
+    <a href="/signup" class="signup-button">SIGNUP</a> 
+
 </div>
 </body>
 <script>

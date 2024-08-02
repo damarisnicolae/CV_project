@@ -13,6 +13,7 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/securecookie"
 	"golang.org/x/crypto/bcrypt"
 
 	wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
@@ -45,6 +46,11 @@ type Template struct {
 	Path string
 }
 
+var cookieHandler = securecookie.New(
+	securecookie.GenerateRandomKey(64), // this key is used for signing
+	securecookie.GenerateRandomKey(32), // this key is used for encryption
+)
+
 func insertUser(username, password string) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -66,6 +72,21 @@ func verifyLogin(username, password string) bool {
 	return err == nil
 }
 
+func setSession(userName string, w http.ResponseWriter) {
+	value := map[string]string{
+		"name": userName,
+	}
+
+	if encoded, err := cookieHandler.Encode("session", value); err == nil {
+		cookie := &http.Cookie{
+			Name:  "session",
+			Value: encoded,
+			Path:  "/",
+		}
+		http.SetCookie(w, cookie)
+	}
+}
+
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
@@ -84,10 +105,25 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if verifyLogin(username, password) {
 		w.Header().Set("Content-Type", "application/json")
+		setSession(username, w)
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(response)
 	}
 
+}
+
+func logoutHandler(w http.ResponseWriter, r *http.Request) {
+	//clear session
+	cookie := &http.Cookie{
+		Name:   "session",
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1,
+	}
+	http.SetCookie(w, cookie)
+
+	w.WriteHeader(http.StatusNoContent)
+	w.Write([]byte("User logout successfully"))
 }
 
 func signUpHandler(w http.ResponseWriter, r *http.Request) {
@@ -105,7 +141,6 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
 	response := struct {
 		Email string `json:"email"`
 	}{
@@ -118,7 +153,6 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(response)
 	}
 }
-
 
 func homeUsers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
@@ -409,7 +443,9 @@ func main() {
 	r.HandleFunc("/user/{id}", updateUser).Methods("PUT")
 	r.HandleFunc("/user/{id}", deleteUser).Methods("DELETE")
 	r.HandleFunc("/pdf", generateTemplate).Methods("GET")
-	r.HandleFunc("/loginuser", loginHandler).Methods("POST")
+	r.HandleFunc("/login", loginHandler).Methods("POST")
+	r.HandleFunc("/signup", signupHandler).Methods("POST")
+	r.HandleFunc("/logout", logoutHandler).Methods("POST")
 
 	log.Println("Starting server on :8080")
 
