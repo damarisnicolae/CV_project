@@ -94,26 +94,17 @@ DESCRIBE user;
 DESCRIBE template;
 ```
 
-## http://127.0.0.1:5000/template1
+## Build the Backend API
 
-````http://127.0.0.1:5000/template1
-
-cd http://127.0.0.1:5000/template1
-
-go http://127.0.0.1:5000/template1
-
-exphttp://127.0.0.1:5000/template1
-
-exphttp://127.0.0.1:5000/template1
-
-echhttp://127.0.0.1:5000/template1
-
-echhttp://127.0.0.1:5000/template1
-
-./Chttp://127.0.0.1:5000/template1
-
-```http://127.0.0.1:5000/template1
-
+```
+cd /PathTo-CV_project/api
+go build -o CV_project main.go
+export DBUSER="cv_user"
+export DBPASS="Y0ur_strong_password"
+echo $DB_USER
+echo $DB_PASSWORD
+./CV_project
+```
 
 ## BFF Flask app setup Frontend
 
@@ -122,7 +113,7 @@ cd /PathTo-CV_project/bff
 export FLASK_APP=app
 export FLASK_ENV=development
 python3 app.py -i 127.0.0.1 -p 5000
-````
+```
 
 ## Browser
 
