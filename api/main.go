@@ -51,16 +51,6 @@ var cookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(32), // this key is used for encryption
 )
 
-func insertUser(username, password string) error {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-
-	_, err = db.Exec("INSERT INTO userlogin (username, password) VALUES (?,?)", username, hashedPassword)
-	return err
-}
-
 func verifyLogin(username, password string) bool {
 	var hashedPassword string
 	err := db.QueryRow("SELECT password FROM userlogin WHERE username = ?", username).Scan(&hashedPassword)
@@ -126,7 +116,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("User logout successfully"))
 }
 
-func signUpHandler(w http.ResponseWriter, r *http.Request) {
+func signupHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -141,17 +131,20 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := struct {
-		Email string `json:"email"`
-	}{
-		Email: email,
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
-	if verifyLogin(username, password) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+	_, err = db.Exec("INSERT INTO userlogin (username, password) VALUES (?,?)", email, hashedPassword)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
+
+	w.WriteHeader(http.StatusNoContent)
+	w.Write([]byte("User signup successfully"))
 }
 
 func homeUsers(w http.ResponseWriter, r *http.Request) {

@@ -82,12 +82,12 @@ def loginuser():
     if request.method == "POST":
         r = requests.post(f"http://{IP}:{PORT}/login", request.form, headers=request.headers)
         if r.status_code == 200:
-            data = r.json()
-            return render_template('greet.html', data = data)
+            # data = r.json()
+            return render_template('greet.html')
         else:
             return render_template('loginform.html')
     
-@app.route('/logout', methods = ['POST'])
+@app.route('/logout', methods = ['GETa'])
 def logoutuser():
     r = requests.post(f"http://{IP}:{PORT}/logout")
     return render_template('home.html')
@@ -98,8 +98,7 @@ def signupuser():
         return render_template('signupform.html')
     if request.method == "POST":
         r = requests.post(f'http://{IP}:{PORT}/signup', request.form, headers=request.headers)
-        data = r.json()
-        return render_template('home.html', data = data)
+        return render_template('home.html')
     
 if __name__=='__main__': 
     app.run(debug=True)
