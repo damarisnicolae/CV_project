@@ -21,5 +21,5 @@ CREATE TABLE user (
 
 CREATE TABLE template (
   id            INT AUTO_INCREMENT  PRIMARY KEY,
-  path          VARCHAR(128) NOT NULL,
-)
+  path          VARCHAR(128) NOT NULL
+);
