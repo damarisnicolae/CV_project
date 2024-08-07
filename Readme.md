@@ -5,7 +5,7 @@
 ```sh
 CV_project
 ├── api                                 # Go API         - backend
-│   ├── CV_project                      # Executable file ...  (cd /PathTo-CV_project/api && go build -o CV_project main.go)
+│   ├── CV_project                      # Executable file ...  (cd $PathCvProject/api && go build -o CV_project main.go)
 │   ├── example.pdf                     # Sample PDF
 │   ├── go.mod                          # Go modules     - dependency management
 │   ├── go.sum                          # Checksum       - dependencies
@@ -58,14 +58,21 @@ pip install --break-system-packages Flask Flask-Bcrypt Flask-Migrate Flask-SQLAl
 
 pip install --break-system-packages Flask requests
 
+## Replace Paths
+
+```sh
+PathCvProject="/bcn/github/CV_project"
+grep -q "PathCvProject=" ~/.bashrc || { echo 'export PathCvProject="/bcn/github/CV_project"                                         # Set path to CV project.' >> ~/.bashrc; source ~/.bashrc; } # Set path to CV project permanent
+```
+
 ## Create database and user
 
 ```sh
 sudo mysql -u root -p
 CREATE DATABASE IF NOT EXISTS users;
 CREATE USER 'cv_user'@'localhost' IDENTIFIED BY 'Y0ur_strong_password';
-# SOURCE bcn/github/CV_project/sql/schema.sql
-mysql -u cv_user -p users < /PathTo-CV_project/sql/schema.sql
+# SOURCE $PathCvProject/sql/schema.sql
+mysql -u cv_user -p users < $PathCvProject/sql/schema.sql
 GRANT ALL PRIVILEGES ON users.* TO 'cv_user'@'localhost';
 FLUSH PRIVILEGES;
 sudo mysql -u 'cv_user' -p users
@@ -78,16 +85,17 @@ sudo mysql -u 'cv_user' -p users
 ALTER USER 'cv_user'@'localhost' IDENTIFIED BY 'Y0ur_strong_password';
 ```
 
-## Import schema.sql
+## Import schemas
 
 ```sh
-mysql -u 'cv_user' -p cv_project < /PathTo-CV_project/sql/schema.sql
+mysql -u 'cv_user' -p cv_project < $PathCvProject/sql/schema.sql
+mysql -u 'cv_user' -p cv_project < $PathCvProject/sql/schemadump.sql
 ```
 
 ## Verify successful import
 
 ```sh
-mysql -u cristy -p cv_project
+mysql -u cv_user -p cv_project
 SHOW DATABASES;
 SHOW TABLES;
 DESCRIBE user;
@@ -96,8 +104,8 @@ DESCRIBE template;
 
 ## Build the Backend API
 
-```
-cd /PathTo-CV_project/api
+```sh
+cd $PathCvProject/api
 go build -o CV_project main.go
 export DBUSER="cv_user"
 export DBPASS="Y0ur_strong_password"
@@ -109,11 +117,18 @@ echo $DB_PASSWORD
 ## BFF Flask app setup Frontend
 
 ```sh
-cd /PathTo-CV_project/bff
+cd $PathCvProject/bff
 export FLASK_APP=app
 export FLASK_ENV=development
 python3 app.py -i 127.0.0.1 -p 5000
 ```
+
+## update DB temporary 
+```sh
+mysql -u 'cv_user' -p -e "USE cv_project; DROP TABLE IF EXISTS user, template;"
+mysql -u 'cv_user' -p cv_project < $PathCvProject/sql/schemadump.sql
+```
+
 
 ## Browser
 
@@ -122,3 +137,5 @@ http://127.0.0.1:5000/template1
 http://127.0.0.1:5000/template2
 
 http://127.0.0.1:5000/template3
+
+
