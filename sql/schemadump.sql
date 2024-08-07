@@ -21,17 +21,17 @@ CREATE TABLE user (
 
 CREATE TABLE template (
   id            INT AUTO_INCREMENT  PRIMARY KEY,
-  path          VARCHAR(128) NOT NULL,
-)
+  path          VARCHAR(128) NOT NULL
+);
 
 INSERT INTO user
   (jobtitle, firstname, lastname, email, phone, adress, city, country, postalcode, dateofbirth, nationality)
 VALUES
-  ('Inginer Software', 'Anne', 'Ungurean', 'anne_ungurean@yahoo.com', '0727999999', 'Str. Lalelelor, nr.17', 'București', 'Romania', '010001', '1990-11-11', 'română')
+  ('Inginer Software', 'Anne', 'Ungurean', 'anne_ungurean@yahoo.com', '0727999999', 'Str. Lalelelor, nr.17', 'București', 'Romania', '010001', '1990-11-11', 'română');
 
 INSERT INTO template
-    (path)
+  (path)
 VALUES
-    ('./template1.html')
-    ('./template2.html')
-    ('./template3.html')
+  ('./template1.html'),
+  ('./template2.html'),
+  ('./template3.html');
