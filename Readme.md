@@ -56,7 +56,6 @@ sudo mysql_secure_installation
 pip install --break-system-packages Flask Flask-Bcrypt Flask-Migrate Flask-SQLAlchemy
 ```
 
-pip install --break-system-packages Flask requests
 
 ## Replace Paths
 
