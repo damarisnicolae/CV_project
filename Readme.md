@@ -62,17 +62,15 @@ pip install --break-system-packages Flask requests
 
 ```sh
 PathCvProject="/bcn/github/CV_project"
-grep -q "PathCvProject=" ~/.bashrc || { echo 'export PathCvProject="/bcn/github/CV_project"                                         # Set path to CV project.' >> ~/.bashrc; source ~/.bashrc; } # Set path to CV project permanent
+grep -q "PathCvProject=" ~/.bashrc || echo "export PathCvProject=\"$PathCvProject\"                                         # Set path to CV project." >> ~/.bashrc && source ~/.bashrc
 ```
 
-## Create database and user
+## Create DB, user
 
 ```sh
 sudo mysql -u root -p
 CREATE DATABASE IF NOT EXISTS users;
 CREATE USER 'cv_user'@'localhost' IDENTIFIED BY 'Y0ur_strong_password';
-# SOURCE $PathCvProject/sql/schema.sql
-mysql -u cv_user -p users < $PathCvProject/sql/schema.sql
 GRANT ALL PRIVILEGES ON users.* TO 'cv_user'@'localhost';
 FLUSH PRIVILEGES;
 sudo mysql -u 'cv_user' -p users
@@ -85,11 +83,11 @@ sudo mysql -u 'cv_user' -p users
 ALTER USER 'cv_user'@'localhost' IDENTIFIED BY 'Y0ur_strong_password';
 ```
 
-## Import schemas
-
+## update DB temporary, Import schemas
 ```sh
-mysql -u 'cv_user' -p cv_project < $PathCvProject/sql/schema.sql
-mysql -u 'cv_user' -p cv_project < $PathCvProject/sql/schemadump.sql
+mysql -u 'cv_user' -p -e "USE cv_project; DROP TABLE IF EXISTS user, template;"
+mysql -u 'cv_user' -p cv_project < $PathCvProject/sql/schemadump.sql  # with    user 
+mysql -u 'cv_user' -p cv_project < $PathCvProject/sql/schema.sql      # without user
 ```
 
 ## Verify successful import
@@ -121,12 +119,6 @@ cd $PathCvProject/bff
 export FLASK_APP=app
 export FLASK_ENV=development
 python3 app.py -i 127.0.0.1 -p 5000
-```
-
-## update DB temporary 
-```sh
-mysql -u 'cv_user' -p -e "USE cv_project; DROP TABLE IF EXISTS user, template;"
-mysql -u 'cv_user' -p cv_project < $PathCvProject/sql/schemadump.sql
 ```
 
 
