@@ -56,7 +56,6 @@ sudo mysql_secure_installation
 pip install --break-system-packages Flask Flask-Bcrypt Flask-Migrate Flask-SQLAlchemy
 ```
 
-
 ## Replace Paths
 
 ```sh
@@ -82,10 +81,11 @@ sudo mysql -u 'cv_user' -p users
 ALTER USER 'cv_user'@'localhost' IDENTIFIED BY 'Y0ur_strong_password';
 ```
 
-## Update DB temporary, Import schemas
+## Update DB temporary, import schemas
+
 ```sh
 mysql -u 'cv_user' -p -e "USE cv_project; DROP TABLE IF EXISTS user, template;"
-mysql -u 'cv_user' -p cv_project < $PathCvProject/sql/schemadump.sql  # with    user 
+mysql -u 'cv_user' -p cv_project < $PathCvProject/sql/schemadump.sql  # with    user
 mysql -u 'cv_user' -p cv_project < $PathCvProject/sql/schema.sql      # without user
 ```
 
@@ -99,7 +99,7 @@ DESCRIBE user;
 DESCRIBE template;
 ```
 
-## Build the Backend API
+## Build the backend API
 
 ```sh
 cd $PathCvProject/api
@@ -111,7 +111,7 @@ echo $DB_PASSWORD
 ./CV_project
 ```
 
-## BFF Flask app setup Frontend
+## BFF Flask app setup frontend
 
 ```sh
 cd $PathCvProject/bff
@@ -120,7 +120,7 @@ export FLASK_ENV=development
 python3 app.py -i 127.0.0.1 -p 5000
 ```
 
-# Github 
+# Github
 
 ### SSH conection
 
@@ -147,6 +147,12 @@ git commit -m "$CommitMssg"
 git pull && git push origin main
 ```
 
+## Start the project
+
+```sh
+cd $PathCvProject && make
+```
+
 ## Browser
 
 http://127.0.0.1:5000/template1
@@ -154,5 +160,3 @@ http://127.0.0.1:5000/template1
 http://127.0.0.1:5000/template2
 
 http://127.0.0.1:5000/template3
-
-
