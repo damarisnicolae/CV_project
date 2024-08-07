@@ -1,8 +1,8 @@
 # Variables
-PathCvProject := $(PathCvProject)  # Path to the CV project 
+PathCvProject := /bcn/github/CV_project # Set to the correct path of the CV_project folder
 DBUSER := cv_user
 DBPASS := Y0ur_strong_password
-MySqlRootPass := $(MySQLRootPass)  # Your MySQL root password
+MySqlRootPass := $(MySQLRootPass)       # Your MySQL root password
 
 # Targets
 .PHONY: all db setup-db build-backend run-backend setup-frontend open-browser
