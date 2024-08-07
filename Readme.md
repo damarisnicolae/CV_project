@@ -82,7 +82,7 @@ sudo mysql -u 'cv_user' -p users
 ALTER USER 'cv_user'@'localhost' IDENTIFIED BY 'Y0ur_strong_password';
 ```
 
-## update DB temporary, Import schemas
+## Update DB temporary, Import schemas
 ```sh
 mysql -u 'cv_user' -p -e "USE cv_project; DROP TABLE IF EXISTS user, template;"
 mysql -u 'cv_user' -p cv_project < $PathCvProject/sql/schemadump.sql  # with    user 
@@ -120,6 +120,32 @@ export FLASK_ENV=development
 python3 app.py -i 127.0.0.1 -p 5000
 ```
 
+# Github 
+
+### SSH conection
+
+```sh
+GitSshKey="/PathTo/.ssh/github_rsa"
+GitUsername="YourUsername"
+GitEmail="YourEmail"
+chmod 600 "$GitSshKey"
+ssh-add "$GitSshKey"
+git config --global user.name "$GitUsername"
+git config --global user.email "$GitEmail"
+git config --global http.sslBackend "openssl"
+ssh -T git@github.com
+```
+
+### Commit & pull-push, avoid conflicts
+
+```sh
+echo "Enter commit message (Title case, infinitive verb, brief and clear summary of changes):"
+read -p "CommitMssg: - " CommitMssg
+cd "$PathCvProject" || exit
+git add .
+git commit -m "$CommitMssg"
+git pull && git push origin main
+```
 
 ## Browser
 
