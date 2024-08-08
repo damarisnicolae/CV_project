@@ -30,9 +30,9 @@
                 <td>{{ user.Lastname }}</td>
                 <td>{{ user.Email }}</td>
                 <td>
-                    <input type="hidden" class="userId" value="{{ user.id }}">
-                    <button onclick="deleteUser({{user.id}})" id="delete-button">DELETE</button>
-                    <button onclick="updateUser({{user.id}})" id="update-button">UPDATE</button>
+                    <input type="hidden" class="userId" value="{{ user.ID }}">
+                    <button onclick="deleteUser({{user.ID}})" id="delete-button">DELETE</button>
+                    <button onclick="updateUser({{user.ID}})" id="update-button">UPDATE</button>
                 </td>
             </tr>
             {% endfor %}
