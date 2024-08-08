@@ -166,7 +166,9 @@ docker-compose ps     # view running containers
 docker-compose rm     # removes stopped service containers
 ```
 
-## Browser
+## Browser links
+
+https://miro.com/app/board/uXjVK6HA_1A=/
 
 http://127.0.0.1:5000/template1
 
