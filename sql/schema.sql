@@ -6,7 +6,7 @@ CREATE TABLE user (
   lastname          VARCHAR(128) NOT NULL,
   email             VARCHAR(128) NOT NULL,
   phone             VARCHAR(128) NOT NULL,
-  adress            VARCHAR(128) NOT NULL,
+  address            VARCHAR(128) NOT NULL,
   city              VARCHAR(128) NOT NULL,
   country           VARCHAR(128) NOT NULL,
   postalcode        VARCHAR(128) NOT NULL,
