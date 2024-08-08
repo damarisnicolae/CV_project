@@ -1,9 +1,5 @@
 # Variables
-PathCvProject := /bcn/github/CV_project
-DBUSER := cv_user
-DBPASS := Y0ur_strong_password
-MySqlRootPass := $(MySQLRootPass)  # Your MySQL root password
-
+include .env
 # Targets
 .PHONY: all db setup-db build-backend run-backend setup-frontend open-browser
 
@@ -11,9 +7,9 @@ all: db setup-db build-backend setup-frontend run-backend open-browser
 
 db:
 	@echo "Setting up MySQL database and user..."
-	sudo -E bash -c 'mysql -u root -p"$$MySqlRootPass" -e "CREATE DATABASE IF NOT EXISTS users;"'
-	sudo -E bash -c 'mysql -u root -p"$$MySqlRootPass" -e "CREATE USER IF NOT EXISTS '\''$(DBUSER)'\''@'\''localhost'\'' IDENTIFIED BY '\''$(DBPASS)'\'';"'
-	sudo -E bash -c 'mysql -u root -p"$$MySqlRootPass" -e "GRANT ALL PRIVILEGES ON users.* TO '\''$(DBUSER)'\''@'\''localhost'\''; FLUSH PRIVILEGES;"'
+	# mysql -u root -p"$(MySqlRootPass)" -e "CREATE DATABASE IF NOT EXISTS users;"
+	# mysql -u root -p"$(MySqlRootPass)" -e "CREATE USER IF NOT EXISTS '$(DBUSER)'@'localhost' IDENTIFIED BY '$(DBPASS)';"
+	# mysql -u root -p"$(MySqlRootPass)" -e "GRANT ALL PRIVILEGES ON users.* TO '$(DBUSER)'@'localhost'; FLUSH PRIVILEGES;"
 
 setup-db:
 	@echo "Updating DB schema..."
@@ -36,3 +32,6 @@ open-browser:
 	@echo "Opening browser with URL..."
 	sleep 2  
 	xdg-open http://127.0.0.1:5000/template1
+
+
+
