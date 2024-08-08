@@ -4,14 +4,11 @@ services:
   api:
     build:
       context: ./api
-      dockerfile: Dockerfile
-    container_name: go-api
+    container_name: api_container
     ports:
       - "8080:8080"
     env_file:
       - .env
-    depends_on:
-      - db
     restart: always
     networks:
       - my-network
@@ -20,12 +17,9 @@ services:
   bff:
     build:
       context: ./bff
-      dockerfile: Dockerfile
-    container_name: bff-service
+    container_name: bff_container
     ports:
-      - "8081:8080"
-    depends_on:
-      - api
+      - "5000:5000"
     restart: always
     networks:
       - my-network
@@ -37,7 +31,7 @@ services:
     image: mysql:5.7
     env_file:
       - .env
-    container_name: mysql-db
+    container_name: db_container
     ports:
       - "3306:3306"
     volumes:
