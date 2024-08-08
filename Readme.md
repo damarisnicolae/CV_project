@@ -36,8 +36,9 @@ CV_project
 
 ## Components:
 
-    Backend  (Go)    : Handles user data management, authentication, and PDF generation.
-    Frontend (Flask) : Provides a web interface for user interactions, including data input, template selection, and CV generation.
+    Backend  (Go)           : Handles user data management, authentication, and PDF generation.
+    Frontend (Python,Flask) : Provides the web interface for user interaction.
+    Database (SQL)          : Stores user information.
 
 ## Prerequisites:
 
@@ -125,10 +126,31 @@ python3 app.py -i 127.0.0.1 -p 5000
 ### SSH conection
 
 ```sh
-GitSshKey="/PathTo/.ssh/github_rsa"
-GitUsername="YourUsername"
+GitSshKey="/PathTo/.ssdocker-compose build  # build 
+docker-compose up       # start
+docker-compose up -d  # run background
+docker-compose stop   # only stop 
+docker-compose down # stops and removes containers
+docker-compose ps        # view running containers
+docker-compose rm       # removes stopped service containers
+
+GitUsername="YourUserndocker-compose build  # build 
+docker-compose up       # start
+docker-compose up -d  # run background
+docker-compose stop   # only stop 
+docker-compose down # stops and removes containers
+docker-compose ps        # view running containers
+docker-compose rm       # removes stopped service containers
+
 GitEmail="YourEmail"
-chmod 600 "$GitSshKey"
+chmod 600 "$GitSshKey"docker-compose build  # build 
+docker-compose up       # start
+docker-compose up -d  # run background
+docker-compose stop   # only stop 
+docker-compose down # stops and removes containers
+docker-compose ps        # view running containers
+docker-compose rm       # removes stopped service containers
+
 ssh-add "$GitSshKey"
 git config --global user.name "$GitUsername"
 git config --global user.email "$GitEmail"
@@ -151,6 +173,18 @@ git pull && git push origin main
 
 ```sh
 cd $PathCvProject && make
+```
+
+## Docker 
+
+```sh
+docker-compose build  # build 
+docker-compose up     # start
+docker-compose up -d  # run background
+docker-compose stop   # only stop 
+docker-compose down   # stops and removes containers
+docker-compose ps     # view running containers
+docker-compose rm     # removes stopped service containers
 ```
 
 ## Browser
