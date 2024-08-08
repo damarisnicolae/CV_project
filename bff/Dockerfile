@@ -12,4 +12,4 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /bff-app
 
 EXPOSE 8080
 
-CMD ["/bff-app"]
+CMD ["python3", "app.py"]

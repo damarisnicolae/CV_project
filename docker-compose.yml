@@ -31,7 +31,7 @@ services:
       - my-network
     env_file:
       - .env
-    command: ["dockerize", "-wait", "tcp://db:3306", "-timeout", "60s", "python", "app.py"]
+    command: ["dockerize", "-wait", "tcp://api:8080", "-timeout", "60s", "python3", "app.py"]
 
   db:
     image: mysql:5.7
@@ -42,7 +42,7 @@ services:
       - "3306:3306"
     volumes:
       - ./sql/schemadump.sql:/docker-entrypoint-initdb.d/dump.sql
-      - db-data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
     restart: always
     networks:
       - my-network
