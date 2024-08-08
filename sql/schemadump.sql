@@ -6,7 +6,7 @@ CREATE TABLE user (
   lastname          VARCHAR(128) NOT NULL,
   email             VARCHAR(128) NOT NULL,
   phone             VARCHAR(128) NOT NULL,
-  adress            VARCHAR(128) NOT NULL,
+  address            VARCHAR(128) NOT NULL,
   city              VARCHAR(128) NOT NULL,
   country           VARCHAR(128) NOT NULL,
   postalcode        VARCHAR(128) NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE template (
 );
 
 INSERT INTO user
-  (jobtitle, firstname, lastname, email, phone, adress, city, country, postalcode, dateofbirth, nationality)
+  (jobtitle, firstname, lastname, email, phone, address, city, country, postalcode, dateofbirth, nationality)
 VALUES
   ('Inginer Software', 'Anne', 'Ungurean', 'anne_ungurean@yahoo.com', '0727999999', 'Str. Lalelelor, nr.17', 'București', 'Romania', '010001', '1990-11-11', 'română');
 
