@@ -22,7 +22,7 @@ build-backend:
 
 setup-frontend:
 	@echo "Setting up frontend Flask app..."
-	export FLASK_APP=app FLASK_ENV=development && cd $(PathCvProject)/bff && python3 app.py -i 127.0.0.1 -p 5000 &
+	export FLASK_APP=app FLASK_ENV=development && cd $(PathCvProject)/bff && python3 app.py -i 127.0.0.1 -p 8080 &
 
 run-backend:
 	@echo "Running backend API..."
