@@ -25,10 +25,10 @@
         <tbody>
             {% for user in users %}
             <tr>
-                <td>{{ user.id }}</td>
-                <td>{{ user.firstname }}</td>
-                <td>{{ user.lastname }}</td>
-                <td>{{ user.email }}</td>
+                <td>{{ user.ID }}</td>
+                <td>{{ user.Firstname }}</td>
+                <td>{{ user.Lastname }}</td>
+                <td>{{ user.Email }}</td>
                 <td>
                     <input type="hidden" class="userId" value="{{ user.id }}">
                     <button onclick="deleteUser({{user.id}})" id="delete-button">DELETE</button>

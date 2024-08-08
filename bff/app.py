@@ -87,7 +87,7 @@ def loginuser():
         else:
             return render_template('loginform.html')
     
-@app.route('/logout', methods = ['GETa'])
+@app.route('/logout', methods = ['GET'])
 def logoutuser():
     r = requests.post(f"http://{IP}:{PORT}/logout")
     return render_template('home.html')
