@@ -126,31 +126,10 @@ python3 app.py -i 127.0.0.1 -p 5000
 ### SSH conection
 
 ```sh
-GitSshKey="/PathTo/.ssdocker-compose build  # build 
-docker-compose up       # start
-docker-compose up -d  # run background
-docker-compose stop   # only stop 
-docker-compose down # stops and removes containers
-docker-compose ps        # view running containers
-docker-compose rm       # removes stopped service containers
-
-GitUsername="YourUserndocker-compose build  # build 
-docker-compose up       # start
-docker-compose up -d  # run background
-docker-compose stop   # only stop 
-docker-compose down # stops and removes containers
-docker-compose ps        # view running containers
-docker-compose rm       # removes stopped service containers
-
+GitSshKey="/PathTo/.ssh/github_rsa"
+GitUsername="YourUsername"
 GitEmail="YourEmail"
-chmod 600 "$GitSshKey"docker-compose build  # build 
-docker-compose up       # start
-docker-compose up -d  # run background
-docker-compose stop   # only stop 
-docker-compose down # stops and removes containers
-docker-compose ps        # view running containers
-docker-compose rm       # removes stopped service containers
-
+chmod 600 "$GitSshKey"
 ssh-add "$GitSshKey"
 git config --global user.name "$GitUsername"
 git config --global user.email "$GitEmail"
