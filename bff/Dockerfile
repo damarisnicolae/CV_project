@@ -1,15 +1,14 @@
-FROM golang:1.22 
+FROM python:3.11-slim
 
 WORKDIR /bff
 
-COPY go.mod go.sum ./
+COPY bff/requirements.txt /bff/
+RUN pip3 install --upgrade pip && \
+    pip3 install -r requirements.txt
 
-RUN go mod download
+COPY bff/ /app/
 
-COPY *.go ./
+EXPOSE 5000
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /bff-app
+CMD ["python3", "app.py", "-i", "127.0.0.1", "-p", "5000"]
 
-EXPOSE 8080
-
-CMD ["python3", "app.py"]

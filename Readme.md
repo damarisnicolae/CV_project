@@ -154,13 +154,13 @@ git pull && git push origin main
 cd $PathCvProject && make
 ```
 
-## Docker 
+## Docker
 
 ```sh
-docker-compose build  # build 
+docker-compose build  # build
 docker-compose up     # start
 docker-compose up -d  # run background
-docker-compose stop   # only stop 
+docker-compose stop   # only stop
 docker-compose down   # stops and removes containers
 docker-compose ps     # view running containers
 docker-compose rm     # removes stopped service containers
