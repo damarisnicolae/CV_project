@@ -69,31 +69,31 @@ grep -q "PathCvProject=" ~/.bashrc || echo "export PathCvProject=\"$PathCvProjec
 ```sh
 sudo mysql -u root -p
 CREATE DATABASE IF NOT EXISTS users;
-CREATE USER 'cv_user'@'localhost' IDENTIFIED BY 'Y0ur_strong_password';
-GRANT ALL PRIVILEGES ON users.* TO 'cv_user'@'localhost';
+CREATE USER 'CV_user'@'localhost' IDENTIFIED BY 'Y0ur_strong_password';
+GRANT ALL PRIVILEGES ON users.* TO 'CV_user'@'localhost';
 FLUSH PRIVILEGES;
-sudo mysql -u 'cv_user' -p users
+sudo mysql -u 'CV_user' -p users
 
 ```
 
 ## Change DB user password
 
 ```sh
-ALTER USER 'cv_user'@'localhost' IDENTIFIED BY 'Y0ur_strong_password';
+ALTER USER 'CV_user'@'localhost' IDENTIFIED BY 'Y0ur_strong_password';
 ```
 
 ## Update DB temporary, import schemas
 
 ```sh
-mysql -u 'cv_user' -p -e "USE cv_project; DROP TABLE IF EXISTS user, template;"
-mysql -u 'cv_user' -p cv_project < $PathCvProject/sql/schemadump.sql  # with    user
-mysql -u 'cv_user' -p cv_project < $PathCvProject/sql/schema.sql      # without user
+mysql -u 'CV_user' -p -e "USE cv_project; DROP TABLE IF EXISTS user, template;"
+mysql -u 'CV_user' -p cv_project < $PathCvProject/sql/schemadump.sql  # with    user
+mysql -u 'CV_user' -p cv_project < $PathCvProject/sql/schema.sql      # without user
 ```
 
 ## Verify successful import
 
 ```sh
-mysql -u cv_user -p cv_project
+mysql -u CV_user -p cv_project
 SHOW DATABASES;
 SHOW TABLES;
 DESCRIBE user;
@@ -105,8 +105,8 @@ DESCRIBE template;
 ```sh
 cd $PathCvProject/api
 go build -o CV_project main.go
-export DBUSER="cv_user"
-export DBPASS="Y0ur_strong_password"
+export MYSQL_USER="CV_user"
+export MYSQL_PASSWORD="Y0ur_strong_password"
 echo $DB_USER
 echo $DB_PASSWORD
 ./CV_project
