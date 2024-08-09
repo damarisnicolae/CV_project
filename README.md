@@ -64,16 +64,25 @@ PathCvProject="/bcn/github/CV_project"
 grep -q "PathCvProject=" ~/.bashrc || echo "export PathCvProject=\"$PathCvProject\"                                         # Set path to CV project." >> ~/.bashrc && source ~/.bashrc
 ```
 
-## Create DB, user
+## Create DB, users table
 
 ```sh
 sudo mysql -u root -p
 CREATE DATABASE IF NOT EXISTS users;
-CREATE USER 'CV_user'@'localhost' IDENTIFIED BY 'Y0ur_strong_password';
-GRANT ALL PRIVILEGES ON users.* TO 'CV_user'@'localhost';
-FLUSH PRIVILEGES;
-sudo mysql -u 'CV_user' -p users
+USE users;
+SOURCE /bcn/github/CV_project/sql/schemadump.sql;
+```
 
+## Verify successful import
+
+```sh
+mysql -u root -p users
+SHOW DATABASES;
+SHOW TABLES;
+DESCRIBE template;
+DESCRIBE users;
+SELECT * FROM template;
+SELECT * FROM users;
 ```
 
 ## Change DB user password
@@ -82,33 +91,14 @@ sudo mysql -u 'CV_user' -p users
 ALTER USER 'CV_user'@'localhost' IDENTIFIED BY 'Y0ur_strong_password';
 ```
 
-## Update DB temporary, import schemas
-
-```sh
-mysql -u 'CV_user' -p -e "USE cv_project; DROP TABLE IF EXISTS user, template;"
-mysql -u 'CV_user' -p cv_project < $PathCvProject/sql/schemadump.sql  # with    user
-mysql -u 'CV_user' -p cv_project < $PathCvProject/sql/schema.sql      # without user
-```
-
-## Verify successful import
-
-```sh
-mysql -u CV_user -p cv_project
-SHOW DATABASES;
-SHOW TABLES;
-DESCRIBE user;
-DESCRIBE template;
-```
-
 ## Build the backend API
 
 ```sh
 cd $PathCvProject/api
+go mod tidy
 go build -o CV_project main.go
-export MYSQL_USER="CV_user"
-export MYSQL_PASSWORD="Y0ur_strong_password"
-echo $DB_USER
-echo $DB_PASSWORD
+export MYSQL_USER="root"
+export MYSQL_PASSWORD="?????????????"
 ./CV_project
 ```
 
@@ -116,9 +106,7 @@ echo $DB_PASSWORD
 
 ```sh
 cd $PathCvProject/bff
-export FLASK_APP=app
-export FLASK_ENV=development
-python3 app.py -i 127.0.0.1 -p 5000
+python3 app.py -i 127.0.0.1 -p 8080
 ```
 
 # Github
