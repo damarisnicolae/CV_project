@@ -155,7 +155,7 @@ func homeUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var users []User
-	rows, err := db.Query("SELECT id, firstname, lastname, email FROM user")
+	rows, err := db.Query("SELECT id, firstname, lastname, email FROM users")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -209,7 +209,7 @@ func showUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user User
-	row := db.QueryRow("SELECT * FROM user WHERE id = ?", 1)
+	row := db.QueryRow("SELECT * FROM users WHERE id = ?", 1)
 	if err := row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages); err != nil {
 		if err == sql.ErrNoRows {
 			http.NotFound(w, r)
@@ -296,7 +296,7 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(userID, 10, 64)
 	if err != nil || id < 1 {
 		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "ID should be a integer")
+		fmt.Fprintf(w, "ID should be an integer")
 		return
 	}
 
@@ -338,7 +338,7 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 
 	row1 := db.QueryRow("SELECT Path FROM template WHERE id = ?", idtemplate_int)
 	row1.Scan(&template.Path)
-	row := db.QueryRow("SELECT * FROM user WHERE id = ?", iduser_int)
+	row := db.QueryRow("SELECT * FROM users WHERE id = ?", iduser_int)
 	row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
 
 	htmlContent, err := os.ReadFile(template.Path)
