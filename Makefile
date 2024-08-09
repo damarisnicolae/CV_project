@@ -1,37 +1,33 @@
 # Variables
 include .env
-# Targets
-.PHONY: all db setup-db build-backend run-backend setup-frontend open-browser
 
-all: db setup-db build-backend setup-frontend run-backend open-browser
+# Targets
+.PHONY: all db api bff browser kill
+
+all: db api bff browser
 
 db:
-	@echo "Setting up MySQL database and user..."
-	# mysql -u root -p"$(MYSQL_ROOT_PASSWORD)" -e "CREATE DATABASE IF NOT EXISTS users;"
-	# mysql -u root -p"$(MYSQL_ROOT_PASSWORD)" -e "CREATE USER IF NOT EXISTS '$(MYSQL_USER)'@'localhost' IDENTIFIED BY '$(MYSQL_PASSWORD)';"
-	# mysql -u root -p"$(MYSQL_ROOT_PASSWORD)" -e "GRANT ALL PRIVILEGES ON users.* TO '$(MYSQL_USER)'@'localhost'; FLUSH PRIVILEGES;"
+	@echo "\n * * * DB...\n "
+	service mysql start
 
-setup-db:
-	@echo "Updating DB schema..."
-	mysql -u '$(MYSQL_USER)' -p'$(MYSQL_PASSWORD)' -e "USE cv_project; DROP TABLE IF EXISTS CV_user, template;"
-	mysql -u '$(MYSQL_USER)' -p'$(MYSQL_PASSWORD)' cv_project < $(PathCvProject)/sql/schemadump.sql
+export
 
-build-backend:
-	@echo "Building backend API..."
-	cd $(PathCvProject)/api && go build -o CV_project main.go
+api:
+	@echo "\n * * * API...\n"
+	cd $(PathCvProject)/api && MYSQL_USER=$(MYSQL_USER) MYSQL_PASSWORD=$(MYSQL_PASSWORD) go run $(PathCvProject)/api/main.go
 
-setup-frontend:
-	@echo "Setting up frontend Flask app..."
+# 
+# bff:
+	@echo "\n * * * BFF...\n"
+	@while ! nc -z 127.0.0.1 8080; do sleep 1; done
 	cd $(PathCvProject)/bff && python3 app.py -i 127.0.0.1 -p 8080 &
 
-run-backend:
-	@echo "Running backend API..."
-	export MYSQL_USER='$(MYSQL_USER)' MYSQL_PASSWORD='$(MYSQL_PASSWORD)' && cd $(PathCvProject)/api && ./CV_project &
+browser:
+	@echo "\n * * * URL...\n"
+	@while ! nc -z 127.0.0.1 5000; do sleep 1; done
+	xdg-open http://127.0.0.1:5000
 
-open-browser:
-	@echo "Opening browser with URL..."
-	sleep 2  
-	xdg-open http://127.0.0.1:5000/template1
-
-
-
+kill:
+	@echo "\n * * * Kill...\n"
+	@lsof -ti :8080 | xargs -r kill -9
+	@lsof -ti :5000 | xargs -r kill -9
