@@ -20,4 +20,3 @@ RUN docker run -d --name db_container \
     -v $(PWD)/schemadump.sql:/docker-entrypoint-initdb.d/dump.sql
 
 CMD ["mysqld"]
-
