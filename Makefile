@@ -14,13 +14,12 @@ export
 
 api:
 	@echo "\n * * * API...\n"
-	cd $(PathCvProject)/api && MYSQL_USER=$(MYSQL_USER) MYSQL_PASSWORD=$(MYSQL_PASSWORD) go run $(PathCvProject)/api/main.go
+	cd $(PathCvProject)/api && MYSQL_USER=$(MYSQL_USER) MYSQL_PASSWORD=$(MYSQL_PASSWORD) go run $(PathCvProject)/api/main.go &
 
-# 
-# bff:
+bff:
 	@echo "\n * * * BFF...\n"
 	@while ! nc -z 127.0.0.1 8080; do sleep 1; done
-	cd $(PathCvProject)/bff && python3 app.py -i 127.0.0.1 -p 8080 &
+	cd $(PathCvProject)/bff && /usr/bin/python3 app.py -i 127.0.0.1 -p 8080 &
 
 browser:
 	@echo "\n * * * URL...\n"
