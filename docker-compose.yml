@@ -19,13 +19,13 @@ services:
       context: ./bff
     container_name: bff_container
     ports:
-      - "5000:5000"
+      - "5000:8080"
     restart: always
     networks:
       - my-network
     env_file:
       - .env
-    command: ["dockerize", "-wait", "tcp://api:8080", "-timeout", "60s", "python3", "app.py"]
+    command: ["dockerize", "-wait", "tcp://127.0.0.1:8080", "-timeout", "60s", "python3", "app.py", "-i", "127.0.0.1", "-p", "8080"]
 
   db:
     image: mysql:5.7
