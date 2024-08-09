@@ -7,14 +7,14 @@ all: db setup-db build-backend setup-frontend run-backend open-browser
 
 db:
 	@echo "Setting up MySQL database and user..."
-	# mysql -u root -p"$(MySqlRootPass)" -e "CREATE DATABASE IF NOT EXISTS users;"
-	# mysql -u root -p"$(MySqlRootPass)" -e "CREATE USER IF NOT EXISTS '$(DBUSER)'@'localhost' IDENTIFIED BY '$(DBPASS)';"
-	# mysql -u root -p"$(MySqlRootPass)" -e "GRANT ALL PRIVILEGES ON users.* TO '$(DBUSER)'@'localhost'; FLUSH PRIVILEGES;"
+	# mysql -u root -p"$(MYSQL_ROOT_PASSWORD)" -e "CREATE DATABASE IF NOT EXISTS users;"
+	# mysql -u root -p"$(MYSQL_ROOT_PASSWORD)" -e "CREATE USER IF NOT EXISTS '$(MYSQL_USER)'@'localhost' IDENTIFIED BY '$(MYSQL_PASSWORD)';"
+	# mysql -u root -p"$(MYSQL_ROOT_PASSWORD)" -e "GRANT ALL PRIVILEGES ON users.* TO '$(MYSQL_USER)'@'localhost'; FLUSH PRIVILEGES;"
 
 setup-db:
 	@echo "Updating DB schema..."
-	mysql -u '$(DBUSER)' -p'$(DBPASS)' -e "USE cv_project; DROP TABLE IF EXISTS user, template;"
-	mysql -u '$(DBUSER)' -p'$(DBPASS)' cv_project < $(PathCvProject)/sql/schemadump.sql
+	mysql -u '$(MYSQL_USER)' -p'$(MYSQL_PASSWORD)' -e "USE cv_project; DROP TABLE IF EXISTS CV_user, template;"
+	mysql -u '$(MYSQL_USER)' -p'$(MYSQL_PASSWORD)' cv_project < $(PathCvProject)/sql/schemadump.sql
 
 build-backend:
 	@echo "Building backend API..."
@@ -22,11 +22,11 @@ build-backend:
 
 setup-frontend:
 	@echo "Setting up frontend Flask app..."
-	export FLASK_APP=app FLASK_ENV=development && cd $(PathCvProject)/bff && python3 app.py -i 127.0.0.1 -p 8080 &
+	cd $(PathCvProject)/bff && python3 app.py -i 127.0.0.1 -p 8080 &
 
 run-backend:
 	@echo "Running backend API..."
-	export DBUSER="cv_user" DBPASS="Y0ur_strong_password" && cd $(PathCvProject)/api && ./CV_project &
+	export MYSQL_USER='$(MYSQL_USER)' MYSQL_PASSWORD='$(MYSQL_PASSWORD)' && cd $(PathCvProject)/api && ./CV_project &
 
 open-browser:
 	@echo "Opening browser with URL..."
