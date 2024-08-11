@@ -396,28 +396,44 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 }
 
 func connectToDatabase() (*sql.DB, error) {
-	cfg := mysql.Config{
-        User:                 os.Getenv("DB_USER"),
-        Passwd:               os.Getenv("DB_PASSWORD"),
-		Net:                  "tcp",
-		Addr:                 "127.0.0.1:3306",
-		DBName:               "users",
-		AllowNativePasswords: true,
-	}
+    cfg := mysql.Config{
+        User:                 os.Getenv("MYSQL_USER"),
+        Passwd:               os.Getenv("MYSQL_PASSWORD"),
+        Net:                  "tcp",
+        Addr:                 os.Getenv("MYSQL_ADDR") + ":" + os.Getenv("MYSQL_PORT"),
+        DBName:               os.Getenv("MYSQL_DATABASE"),
+        AllowNativePasswords: true,
+    }
 
-	db, err := sql.Open("mysql", cfg.FormatDSN())
-	if err != nil {
-		return nil, err
-	}
+    fmt.Println("DB connection...")
+    fmt.Printf("\nEnvironment variables:\n")
+    fmt.Printf("  User: %s\n", cfg.User)
+    fmt.Printf("  Password: %s\n", strings.Repeat("*", len(cfg.Passwd)))
+    fmt.Printf("  Address: %s\n", cfg.Addr)
+    fmt.Printf("  Database Name: %s\n\n", cfg.DBName)
 
-	if err := db.Ping(); err != nil {
-		db.Close()
-		return nil, err
-	}
+    dsn := cfg.FormatDSN()
+    maskedDSN := fmt.Sprintf("%s:%s@tcp(%s)/%s?%s", cfg.User, strings.Repeat("*", len(cfg.Passwd)), cfg.Addr, cfg.DBName, dsn[strings.Index(dsn, "?")+1:])
+    fmt.Printf("DSN: %s\n", maskedDSN)
 
-	fmt.Println("Connected to database!")
-	return db, nil
+    fmt.Println("\nOpening database connection...")
+    db, err := sql.Open("mysql", dsn)
+    if err != nil {
+        fmt.Println("Error connection:", err)
+        return nil, err
+    }
+
+    fmt.Println("Pinging DB...")
+    if err = db.Ping(); err != nil {
+        fmt.Printf("\033[31mError pinging database: %v\033[0m\n", err)
+        db.Close()
+        return nil, err
+    }
+
+    fmt.Println("Connected to database at the address:", cfg.Addr)
+    return db, nil
 }
+
 
 func main() {
 	var err error

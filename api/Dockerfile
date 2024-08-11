@@ -1,19 +1,29 @@
-FROM golang:1.22 AS start
+FROM golang:1.22-alpine AS builder
 
-WORKDIR /api
+ENV DB_HOST  cv_db-container
+ENV DB_PORT  3306
+
+WORKDIR /app
 
 COPY go.mod go.sum ./
-
 RUN go mod download
 
-COPY *.go ./
+COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /docker-api
+RUN go build -o main .
 
-FROM scratch
+FROM alpine:latest
 
-COPY --from=start /docker-api /docker-api
+RUN apk --no-cache add wget \
+    && wget https://github.com/jwilder/dockerize/releases/download/v0.6.1/dockerize-linux-amd64-v0.6.1.tar.gz \
+    && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-v0.6.1.tar.gz \
+    && rm dockerize-linux-amd64-v0.6.1.tar.gz \
+    && apk del wget
+
+WORKDIR /root/
+
+COPY --from=builder /app/main .
 
 EXPOSE 8080
 
-CMD [ "/docker-api" ]
+CMD ["dockerize", "-wait", "tcp://${DB_HOST}:${DB_PORT}", "-timeout", "60s", "./main"]

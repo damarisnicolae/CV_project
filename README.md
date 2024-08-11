@@ -36,9 +36,11 @@ CV_project
 
 ## Components:
 
-    Backend  (Go)           : Handles user data management, authentication, and PDF generation.
-    Frontend (Python,Flask) : Provides the web interface for user interaction.
-    Database (SQL)          : Stores user information.
+    Backend  (Go)           : HandlMYSQL_
+
+MYSQL_s user data management, authentication, and PDF generation.
+Frontend (Python,Flask) : Provides the web interface for user interaction.
+Database (SQL) : Stores user information.
 
 ## Prerequisites:
 
@@ -97,8 +99,8 @@ ALTER USER 'CV_user'@'localhost' IDENTIFIED BY 'Y0ur_strong_password';
 cd $PathCvProject/api
 go mod tidy
 go build -o CV_project main.go
-export MYSQL_USER="root"
-export MYSQL_PASSWORD="?????????????"
+export DB_USER="root"
+export DB_PASSWORD="?????????????"
 ./CV_project
 ```
 
