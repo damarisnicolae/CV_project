@@ -15,6 +15,7 @@ export
 api:
 	@echo "\n * * * API...\n"
 	cd $(PathCvProject)/api && MYSQL_USER=$(MYSQL_USER) MYSQL_PASSWORD=$(MYSQL_PASSWORD) go run $(PathCvProject)/api/main.go &
+	# MYSQL_USER=$MYSQL_USER MYSQL_PASSWORD=$MYSQL_PASSWORD go run main.go 
 
 bff:
 	@echo "\n * * * BFF...\n"
@@ -30,3 +31,5 @@ kill:
 	@echo "\n * * * Kill...\n"
 	@lsof -ti :8080 | xargs -r kill -9
 	@lsof -ti :5000 | xargs -r kill -9
+	@lsof -ti :3306 | xargs -r kill -9
+
