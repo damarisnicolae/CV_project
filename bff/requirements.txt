@@ -6,3 +6,4 @@ alembic==1.13.2
 werkzeug==3.0.3
 bcrypt==4.2.0
 migrate==0.3.8
+gunicorn==23.0.0
