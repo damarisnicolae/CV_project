@@ -1,54 +1,67 @@
-version: '3.8'
-
 services:
-  api:
+  cv_db-container:
     build:
-      context: ./api
-    container_name: api_container
-    ports:
-      - "8080:8080"
-    env_file:
-      - .env
-    restart: always
+      context: ./sql
+    image: cv_db-image:8.0
+    container_name: cv_db-container
     networks:
       - my-network
-    command: ["dockerize", "-wait", "tcp://db:3306", "-timeout", "60s", "./main"]
-
-  bff:
-    build:
-      context: ./bff
-    container_name: bff_container
     ports:
-      - "5000:8080"
-    restart: always
-    networks:
-      - my-network
+      - "3307:3306" # 
     env_file:
       - .env
-    command: ["dockerize", "-wait", "tcp://127.0.0.1:8080", "-timeout", "60s", "python3", "app.py", "-i", "127.0.0.1", "-p", "8080"]
-
-  db:
-    image: mysql:5.7
-    env_file:
-      - .env
-    container_name: db_container
-    ports:
-      - "3306:3306"
     volumes:
       - ./sql/schemadump.sql:/docker-entrypoint-initdb.d/dump.sql
-      - mysql-data:/var/lib/mysql
-    restart: always
-    networks:
-      - my-network
+      #- db-data:/var/lib/mysql
+      - ./sql/db.cnf:/etc/mysql/my.cnf
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: always
+
+
+  cv_api-container:
+    build:
+      context: ./api
+    image: cv_api-image
+    container_name: cv_api-container
+    depends_on:
+      cv_db-container:
+        condition: service_healthy
+    restart: always
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    networks:
+      - my-network
+    command: ["dockerize", "-wait", "tcp://cv_db-container:3306", "-timeout", "60s", "./main"]
+
+
+  cv_bff-container:
+    build:
+      context: ./bff
+    image: cv_bff-image
+    container_name: cv_bff-container
+    depends_on:
+      cv_db-container:
+        condition: service_healthy
+    restart: always
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    networks:
+      - my-network
+    command: ["dockerize", "-wait", "tcp://cv_api-container:8080", "-timeout", "60s", "python3", "app.py", "-i", "cv_api-container", "-p", "8080"]
+
 
 networks:
   my-network:
     driver: bridge
+
 
 volumes:
   db-data:
