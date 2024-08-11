@@ -81,6 +81,7 @@ SOURCE /bcn/github/CV_project/sql/schemadump.sql;
 mysql -u root -p users
 SHOW DATABASES;
 SHOW TABLES;
+USE users;
 DESCRIBE template;
 DESCRIBE users;
 SELECT * FROM template;
@@ -165,3 +166,4 @@ http://127.0.0.1:5000/template1
 http://127.0.0.1:5000/template2
 
 http://127.0.0.1:5000/template3
+
