@@ -397,8 +397,8 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 
 func connectToDatabase() (*sql.DB, error) {
 	cfg := mysql.Config{
-		User:                 os.Getenv("MYSQL_USER"), // TODO
-		Passwd:               os.Getenv("MYSQL_PASSWORD"),
+        User:                 os.Getenv("DB_USER"),
+        Passwd:               os.Getenv("DB_PASSWORD"),
 		Net:                  "tcp",
 		Addr:                 "127.0.0.1:3306",
 		DBName:               "users",
