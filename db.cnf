@@ -1,0 +1,4 @@
+[mysqld]
+skip-host-cache
+host_cache_size=0
+pid-file=$PathCvProject/sql/mysql.pid
