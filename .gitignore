@@ -1,3 +1,5 @@
+api/CV_project
 __pycache__/
 **/.env
-api/CV_project
+**/.pid
+sql/*.cnf
