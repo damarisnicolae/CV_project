@@ -1,9 +1,9 @@
 services:
-  cv_db-container:
+  db:
     build:
       context: ./sql
-    image: cv_db-image:8.0
-    container_name: cv_db-container
+    image: db:8.0
+    container_name: db
     networks:
       - my-network
     ports:
@@ -22,14 +22,11 @@ services:
     restart: always
 
 
-  cv_api-container:
+  api:
     build:
       context: ./api
-    image: cv_api-image
-    container_name: cv_api-container
-    depends_on:
-      cv_db-container:
-        condition: service_healthy
+    image: api
+    container_name: api
     restart: always
     ports:
       - "8080:8080"
@@ -37,17 +34,14 @@ services:
       - .env
     networks:
       - my-network
-    command: ["dockerize", "-wait", "tcp://cv_db-container:3306", "-timeout", "60s", "./main"]
+    command: ["dockerize", "-wait", "tcp://db:3306", "-timeout", "60s", "./main"]
 
 
-  cv_bff-container:
+  bff:
     build:
       context: ./bff
-    image: cv_bff-image
-    container_name: cv_bff-container
-    depends_on:
-      cv_db-container:
-        condition: service_healthy
+    image: bff
+    container_name: bff
     restart: always
     ports:
       - "5000:5000"
@@ -55,7 +49,7 @@ services:
       - .env
     networks:
       - my-network
-    command: ["dockerize", "-wait", "tcp://cv_api-container:8080", "-timeout", "60s", "python3", "app.py", "-i", "cv_api-container", "-p", "8080"]
+    command: ["dockerize", "-wait", "tcp://api:8080", "-timeout", "60s", "python3", "app.py", "-i", "api", "-p", "8080"]
 
 
 networks:
