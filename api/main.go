@@ -456,6 +456,11 @@ func main() {
 	r.HandleFunc("/signup", signupHandler).Methods("POST")
 	r.HandleFunc("/logout", logoutHandler).Methods("POST")
 
+	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+        w.WriteHeader(http.StatusOK)
+        w.Write([]byte("API is running"))
+    }).Methods("GET")
+
 	log.Println("Starting server on :8080")
 
 	if err := http.ListenAndServe(":8080", r); err != nil {

@@ -1,6 +1,6 @@
 # CV Management System API
 
-## Overview : _This project provides a platform for managing user data and generating custom CV templates._
+This project provides a platform for managing user data and generating custom CV templates.
 
 ```sh
 CV_project
@@ -14,6 +14,8 @@ CV_project
 │   ├── app.py                          # Main Flask application file
 │   ├── css                             # CSS files      - styling
 │   │   └── users.css                   # Custom CSS     - user-related pages
+│   ├── Dockerfile                      # Dockerfile     - bFF
+│   ├── requirements.txt                # Requirements   - python dependencies
 │   ├── templates                       # HTML templates - frontend
 │   │   ├── edit_form.html              # HTML     form  - editing user data
 │   │   ├── greet.html                  # Greeting page
@@ -26,8 +28,16 @@ CV_project
 │   │   ├── template2.html              # CV template 2
 │   │   └── template3.html              # CV template 3
 │   └── users.js                        # JavaScript     - user-related functionality
+├── db.cnf                              # Database configuration                               
+├── docker-compose.yml                  # Docker Compose configuration
+├── .env                                # Environment variables file                                
 ├── .gitignore                          # Git ignore     - version control
+├── Makefile                            # Building and running
+├── README.md                           # Project documentation
 ├── sql                                 # SQL files      - database schema
+│   ├── db.cnf                          # Database configuration                         
+│   ├── Dockerfile                      # Dockerfile     - sql                   
+│   ├── mysql.pid                       # MySQL process ID file                      
 │   ├── schemadump.sql                  # Schema creation and sample data
 │   └── schema.sql                      # Schema creation only
 └── src                                 # Source code
@@ -50,6 +60,30 @@ Database (SQL) : Stores user information.
 - `wkhtmltopdf               `: _PDF generation_
 - `Git                       `: _Version control_
 - `Docker & Docker Compose   `: _Containerized deployment_
+
+
+## Environment variables file: .env file
+
+```sh
+MYSQL_ROOT_PASSWORD=CCCvvv@@@222
+MYSQL_PASSWORD= ***
+MYSQL_ROOT_USER=root
+MYSQL_USER= ***
+MYSQL_ADDR=cv_db-container
+MYSQL_HOST=localhost
+MYSQL_DATABASE=users
+MYSQL_PORT=3306
+
+DB_PROJECT=CV_project
+DB_ROOT_PASSWORD= ***
+DB_PASSWORD= ***
+DB_USER=cristy
+DB_ROOT_USER=root
+DB_ADDR=cv_db-container
+DB_DATABASE=users
+DB_HOST=
+DB_PORT=3306
+```
 
 ## Install Basic Tools:
 
@@ -139,10 +173,13 @@ git commit -m "$CommitMssg"
 git pull && git push origin main
 ```
 
-## Start the project
+## Start the project: Makefile
 
 ```sh
-cd $PathCvProject && make
+cd $PathCvProject 
+make kill             # Stop and kill processes running on ports 8080, 5000, and 3306
+make                  # Build and start the services
+make docker           # # Start services using Docker Compose
 ```
 
 ## Docker
