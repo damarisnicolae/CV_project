@@ -2,5 +2,14 @@ api/CV_project
 __pycache__/
 **/.env
 **/.pid
-sql/*.cnf
+**/.cry
+**/.cry/*
+sql/db-data/
+sql/db.cnf
+sql/.buildkit-cache
+sql/db_datadir/mysql-error.log
+sql/db_datadir/mysql.cnf
+sql/db_datadir/mysql.pid
+sql/db_datadir/mysql.sock
+sql/mysql.pid
 
