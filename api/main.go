@@ -1,5 +1,6 @@
 package main
 
+// Import the required packages and functions
 import (
 	"bytes"
 	"database/sql"
@@ -236,6 +237,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Insert the user into the database
 	_, err := db.Exec("INSERT INTO users (Jobtitle, Firstname, Lastname, Email, Phone, Address, City, Country, Postalcode, Dateofbirth, Nationality, Summary, Workexperience, Education, Skills, Languages) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		user.Jobtitle, user.Firstname, user.Lastname, user.Email, user.Phone, user.Address, user.City, user.Country, user.Postalcode, user.Dateofbirth, user.Nationality, user.Summary, user.Workexperience, user.Education, user.Skills, user.Languages)
 	if err != nil {
@@ -267,6 +269,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if the user exists
 	_, err = db.Exec("UPDATE users SET jobtitle=?, first_name=?, last_name=?, email=?, phone=?, address=?, city=?, country=?, postal_code=?, date_of_birth=?, nationality=?, summary=?, work_experience=?, education=?, skills=?, languages=? WHERE id=?",
 		user.Jobtitle, user.Firstname, user.Lastname, user.Email, user.Phone, user.Address, user.City, user.Country, user.Postalcode, user.Dateofbirth, user.Nationality, user.Summary, user.Workexperience, user.Education, user.Skills, user.Languages, id)
 	if err != nil {
@@ -325,22 +328,24 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 
 	iduser_int, err := strconv.Atoi(user_id[0])
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("An error occurred: %v", err)
 	}
 
 	idtemplate_int, err := strconv.Atoi(template_id[0])
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("An error occurred: %v", err)
 	}
 
 	var user User
 	var template Template
 
+	// Get the path of the template
 	row1 := db.QueryRow("SELECT Path FROM template WHERE id = ?", idtemplate_int)
 	row1.Scan(&template.Path)
 	row := db.QueryRow("SELECT * FROM users WHERE id = ?", iduser_int)
 	row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
 
+	
 	htmlContent, err := os.ReadFile(template.Path)
 	if err != nil {
 		panic(err)
@@ -365,84 +370,99 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 	htmlString = strings.ReplaceAll(htmlString, "{{Skills}}", user.Skills)
 	htmlString = strings.ReplaceAll(htmlString, "{{Languages}}", user.Languages)
 
+	// Write 
 	err = os.WriteFile("../bff/templates/populate_template.html", []byte(htmlString), 0644)
 	if err != nil {
 		panic(err)
 	}
-
+	// Read 
 	populateHtml, err := os.ReadFile("../bff/templates/populate_template.html")
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	// Create PDF 
 	pdfg, err := wkhtml.NewPDFGenerator()
 	if err != nil {
 		return
 	}
-
+	// Add HTML page 
 	pdfg.AddPage(wkhtml.NewPageReader(bytes.NewReader(populateHtml)))
-
+	// Create the PDF document in memory
 	err = pdfg.Create()
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	// Write the PDF document to a file
 	err = pdfg.WriteFile("./example.pdf")
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	// Respond with template and user IDs
 	fmt.Fprintf(w, "%s, %s", template_id, user_id)
 }
 
+	// * Get the value of an environment variable or return a default value
+func getEnv(key, fallback string) string {
+    if value, exists := os.LookupEnv(key); exists {
+        return value
+    }
+    return fallback
+}
+
+ // ? Connection to the database
 func connectToDatabase() (*sql.DB, error) {
+	
     cfg := mysql.Config{
-        User:                 os.Getenv("MYSQL_USER"),
-        Passwd:               os.Getenv("MYSQL_PASSWORD"),
+        User:                 getEnv("MYSQL_USER", os.Getenv("MYSQL_ROOT_USER")),
+        Passwd:               getEnv("MYSQL_PASSWORD", os.Getenv("MYSQL_ROOT_PASSWORD")),
         Net:                  "tcp",
         Addr:                 os.Getenv("MYSQL_ADDR") + ":" + os.Getenv("MYSQL_PORT"),
         DBName:               os.Getenv("MYSQL_DATABASE"),
         AllowNativePasswords: true,
     }
 
-    fmt.Println("DB connection...")
-    fmt.Printf("\nEnvironment variables:\n")
-    fmt.Printf("  User: %s\n", cfg.User)
-    fmt.Printf("  Password: %s\n", strings.Repeat("*", len(cfg.Passwd)))
-    fmt.Printf("  Address: %s\n", cfg.Addr)
-    fmt.Printf("  Database Name: %s\n\n", cfg.DBName)
+	fmt.Println("\n * * * Establishing connection to the database...")
+	fmt.Printf("\n\033[36m Environment variables printed fron main.go:\n\n")
+    fmt.Printf("	User:          < %s >\n", cfg.User)
+	fmt.Printf("	Password:      < %s*pass*%s >\n", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
+    fmt.Printf("	Address:       < %s >\n", cfg.Addr)
+    fmt.Printf("	Database Name: < %s >\n\n", cfg.DBName)
 
     dsn := cfg.FormatDSN()
-    maskedDSN := fmt.Sprintf("%s:%s@tcp(%s)/%s?%s", cfg.User, strings.Repeat("*", len(cfg.Passwd)), cfg.Addr, cfg.DBName, dsn[strings.Index(dsn, "?")+1:])
-    fmt.Printf("DSN: %s\n", maskedDSN)
+    maskedPasswd := fmt.Sprintf("%s*pass*%s", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
+    maskedDSN := fmt.Sprintf("%s:%s@tcp(%s)/%s?%s", cfg.User, maskedPasswd, cfg.Addr, cfg.DBName, dsn[strings.Index(dsn, "?")+1:])
+    fmt.Printf(" DSN: %s\033[0m\n", maskedDSN)
 
-    fmt.Println("\nOpening database connection...")
+    fmt.Println("\n * Opening database connection...")
     db, err := sql.Open("mysql", dsn)
     if err != nil {
         fmt.Println("Error connection:", err)
         return nil, err
     }
 
-    fmt.Println("Pinging DB...")
+    fmt.Println(" * Pinging DB...")
     if err = db.Ping(); err != nil {
-        fmt.Printf("\033[31mError pinging database: %v\033[0m\n", err)
+        fmt.Printf("\033[31m	Error pinging database: %v\033[0m\n", err)
         db.Close()
         return nil, err
     }
 
-    fmt.Println("Connected to database at the address:", cfg.Addr)
+    fmt.Println(" * Connected to database at the address:", cfg.Addr)
     return db, nil
 }
 
 
 func main() {
 	var err error
+
+	// Connect to the database
 	db, err = connectToDatabase()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err) // Log and exit if there is an error
 	}
 	defer db.Close()
 
+	// Create a new router
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", home).Methods("GET")
@@ -456,14 +476,15 @@ func main() {
 	r.HandleFunc("/signup", signupHandler).Methods("POST")
 	r.HandleFunc("/logout", logoutHandler).Methods("POST")
 
+	// Health check endpoint
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
         w.WriteHeader(http.StatusOK)
         w.Write([]byte("API is running"))
     }).Methods("GET")
 
-	log.Println("Starting server on :8080")
-
+	// Start the HTTP server
+	log.Println("\n * Starting the HTTP server on port 8080...")
 	if err := http.ListenAndServe(":8080", r); err != nil {
-		log.Fatalf("listen and serve: %s\n", err)
+		log.Fatalf("\n * Failed to start HTTP server: %s\n", err)
 	}
 }
