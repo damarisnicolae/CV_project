@@ -416,7 +416,7 @@ func connectToDatabase() (*sql.DB, error) {
         User:                 getEnv("MYSQL_USER", os.Getenv("MYSQL_ROOT_USER")),
         Passwd:               getEnv("MYSQL_PASSWORD", os.Getenv("MYSQL_ROOT_PASSWORD")),
         Net:                  "tcp",
-        Addr:                 os.Getenv("MYSQL_ADDR") + ":" + os.Getenv("MYSQL_PORT"),
+        Addr:                 os.Getenv("MYSQL_HOST") + ":" + os.Getenv("MYSQL_PORT"),
         DBName:               os.Getenv("MYSQL_DATABASE"),
         AllowNativePasswords: true,
     }
