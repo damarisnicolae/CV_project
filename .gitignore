@@ -3,6 +3,7 @@ __pycache__/
 *sql-error*
 *db.cnf
 *-cache
+*.cry*
 *.env
-
+*.log
 

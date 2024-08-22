@@ -15,3 +15,10 @@ API:
 BFF:
 	@while ! nc -z 127.0.0.1 8080; do sleep 1; done
 	@cd $(PathCvProject)/bff && /usr/bin/python3 app.py -i 127.0.0.1 -p 8080
+
+# Docker
+ON:
+	@docker-compose -f ./docker-compose.yml up -d
+OFF:
+	@docker-compose down --rmi all -v --remove-orphans 
+	@docker system prune -a -f || true
