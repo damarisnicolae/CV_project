@@ -421,17 +421,17 @@ func connectToDatabase() (*sql.DB, error) {
         AllowNativePasswords: true,
     }
 
-	fmt.Println("\n * * * Establishing connection to the database...")
-	fmt.Printf("\n\033[36m Environment variables printed fron main.go:\n\n")
-    fmt.Printf("	User:          < %s >\n", cfg.User)
-	fmt.Printf("	Password:      < %s*pass*%s >\n", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
-    fmt.Printf("	Address:       < %s >\n", cfg.Addr)
-    fmt.Printf("	Database Name: < %s >\n\n", cfg.DBName)
+	fmt.Println("\n\033[1;34;1m * * * Establishing connection to the database...")
+	fmt.Printf("\n\033[1;37;1m * Environment variables print fron \033[1;36;1mmain.go:\n\n\033[1;36;1m")
+    fmt.Printf("	User:          ➮ %s \n", cfg.User)
+	fmt.Printf("	Password:      ➮ %s*pass*%s \n", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
+    fmt.Printf("	Address:       ➮ %s \n", cfg.Addr)
+    fmt.Printf("	Database Name: ➮ %s \n\n", cfg.DBName)
 
     dsn := cfg.FormatDSN()
     maskedPasswd := fmt.Sprintf("%s*pass*%s", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
     maskedDSN := fmt.Sprintf("%s:%s@tcp(%s)/%s?%s", cfg.User, maskedPasswd, cfg.Addr, cfg.DBName, dsn[strings.Index(dsn, "?")+1:])
-    fmt.Printf(" DSN: %s\033[0m\n", maskedDSN)
+    fmt.Printf("	DSN:          \033[1;36;5m ➮ %s\033[0m\n", maskedDSN)
 
     fmt.Println("\n * Opening database connection...")
     db, err := sql.Open("mysql", dsn)
@@ -447,7 +447,7 @@ func connectToDatabase() (*sql.DB, error) {
         return nil, err
     }
 
-    fmt.Println(" * Connected to database at the address:", cfg.Addr)
+    fmt.Println("\033[1;37;1m * Connecting to database to the address: ➮\033[1;94;1m",cfg.Addr,"\033[0m")
     return db, nil
 }
 
@@ -483,7 +483,7 @@ func main() {
     }).Methods("GET")
 
 	// Start the HTTP server
-	log.Println("\n * Starting the HTTP server on port 8080...")
+	log.Println("\n\033[1;37;1m * Starting the HTTP server on port:      ➮\033[1;94;1m 8080\033[0m")
 	if err := http.ListenAndServe(":8080", r); err != nil {
 		log.Fatalf("\n * Failed to start HTTP server: %s\n", err)
 	}

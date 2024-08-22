@@ -1,9 +1,9 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, abort
 import requests, json, argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-i", "--ip", help="API IP")
-parser.add_argument("-p", "--port", help="API PORT")
+parser.add_argument("-i", "--ip", help="API IP", default="cv_api_container")
+parser.add_argument("-p", "--port", help="API PORT", default="8080")
 args = vars(parser.parse_args())
 
 IP = args["ip"]
@@ -14,9 +14,14 @@ app = Flask(__name__)
 @app.route('/', methods=['GET'])
 def home():
     url = f"http://{IP}:{PORT}/users"
-    response = requests.get(url = url)
-    data = response.json()
-    return render_template('home.html', users = data)
+    try:
+        response = requests.get(url=url)
+        response.raise_for_status()  # Raise an HTTPError for bad responses
+        data = response.json()
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"Request failed: {e}")
+        abort(500, description="Internal Server Error")
+    return render_template('home.html', users=data)
 
 @app.route('/user', methods = ['POST'])
 def add_user():
