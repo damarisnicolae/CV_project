@@ -1,61 +1,78 @@
+# ./docker-compose.yml
 services:
-  db:
+  cv_db-service:
+    env_file:
+      - ./.env
     build:
       context: ./sql
-    image: db:8.0
-    container_name: db
+      dockerfile: ./sql/Dockerfile
+    image: cv_db-image:9.0.1-lts # mysql
+    container_name: cv_db-container
     networks:
-      - my-network
+      - cv-network
     ports:
-      - "3307:3306" # 
-    env_file:
-      - .env
+      - "3307:3306"
     volumes:
       - ./sql/schemadump.sql:/docker-entrypoint-initdb.d/dump.sql
-      #- db-data:/var/lib/mysql
-      - ./sql/db.cnf:/etc/mysql/my.cnf
+      - mysql-data:/var/lib/mysql
+      - ./sql/db_datadir/mysql.cnf:/etc/mysql/my.cnf # /etc/mysql/mysql.conf.d/mysqld.cnf
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: always
+    command: ["mysqld", "--defaults-file=/etc/mysql/my.cnf"]
 
-
-  api:
+  cv_api-service:
+    env_file:
+      - ./.env
     build:
       context: ./api
-    image: api
-    container_name: api
+      dockerfile: ./api/Dockerfile
+    image: cv_api-image:3.20.2-alpine # golang
+    container_name: cv_api-container
+    networks:
+      - cv-network
+    depends_on:
+      cv_db-service:
+        condition: service_healthy
     restart: always
     ports:
       - "8080:8080"
+    command: ["dockerize", "-wait", "tcp://cv_api-container:3306", "-timeout", "60s", "./main"]
+
+  cv_bff-service:
     env_file:
-      - .env
-    networks:
-      - my-network
-    command: ["dockerize", "-wait", "tcp://db:3306", "-timeout", "60s", "./main"]
-
-
-  bff:
+      - ./.env
     build:
       context: ./bff
-    image: bff
-    container_name: bff
+      dockerfile: ./bff/Dockerfile
+    image: cv_bff-image:3.11-slim # python
+    container_name: cv_bff-container
+    networks:
+          - cv-network
+    environment:
+        - API_URL=http://cv_api_container:8080
+    depends_on:
+      cv_db-service:
+        condition: service_healthy
     restart: always
     ports:
       - "5000:5000"
-    env_file:
-      - .env
-    networks:
-      - my-network
-    command: ["dockerize", "-wait", "tcp://api:8080", "-timeout", "60s", "python3", "app.py", "-i", "api", "-p", "8080"]
+    command: ["dockerize", "-wait", "tcp://cv_api-container:8080", "-timeout", "60s", "python3", "app.py", "-i", "cv_api_container", "-p", "8080"]
 
 
+  
 networks:
-  my-network:
+  cv-network:
+    name: cv-network
     driver: bridge
-
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1
 
 volumes:
-  db-data:
+  mysql-data:
+    name: cv_db-volume
