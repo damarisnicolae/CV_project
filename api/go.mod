@@ -1,10 +1,11 @@
-module example/CV_project
+module github.com/damarisnicolae/CV_project
 
 go 1.22
 
 require (
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/gorilla/mux v1.8.1
+	github.com/stretchr/testify v1.9.0 // indirect
 )
 
 require (
