@@ -5,11 +5,8 @@ services:
       - ./.env
     build:
       context: ./sql
-      dockerfile: ./sql/Dockerfile
     image: cv_db-image:9.0.1-lts # mysql
     container_name: cv_db-container
-    networks:
-      - cv-network
     ports:
       - "3307:3306"
     volumes:
@@ -18,28 +15,31 @@ services:
       - ./sql/db_datadir/mysql.cnf:/etc/mysql/my.cnf # /etc/mysql/mysql.conf.d/mysqld.cnf
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
+      interval: 20s
+      timeout: 10s
       retries: 5
+      start_period: 30s
+    networks:
+      - cv-network
     restart: always
-    command: ["mysqld", "--defaults-file=/etc/mysql/my.cnf"]
+    command: ["mysqld"]
+
 
   cv_api-service:
     env_file:
       - ./.env
     build:
       context: ./api
-      dockerfile: ./api/Dockerfile
     image: cv_api-image:3.20.2-alpine # golang
     container_name: cv_api-container
-    networks:
-      - cv-network
+    ports:
+      - "8080:8080"
     depends_on:
       cv_db-service:
         condition: service_healthy
+    networks:
+      - cv-network
     restart: always
-    ports:
-      - "8080:8080"
     command: ["dockerize", "-wait", "tcp://cv_api-container:3306", "-timeout", "60s", "./main"]
 
   cv_bff-service:
@@ -47,19 +47,16 @@ services:
       - ./.env
     build:
       context: ./bff
-      dockerfile: ./bff/Dockerfile
     image: cv_bff-image:3.11-slim # python
     container_name: cv_bff-container
-    networks:
-          - cv-network
-    environment:
-        - API_URL=http://cv_api_container:8080
+    ports:
+      - "5000:5000"
     depends_on:
       cv_db-service:
         condition: service_healthy
+    networks:
+          - cv-network
     restart: always
-    ports:
-      - "5000:5000"
     command: ["dockerize", "-wait", "tcp://cv_api-container:8080", "-timeout", "60s", "python3", "app.py", "-i", "cv_api_container", "-p", "8080"]
 
 
