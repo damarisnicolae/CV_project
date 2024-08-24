@@ -11,6 +11,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -454,14 +455,19 @@ func connectToDatabase() (*sql.DB, error) {
 
 func main() {
 	var err error
-
-	// Connect to the database
-	db, err = connectToDatabase()
-	if err != nil {
-		log.Fatal(err) // Log and exit if there is an error
-	}
-	defer db.Close()
-
+	
+	// Connect to the database, retry if the connection fails
+	for {
+        db, err = connectToDatabase()
+        if err != nil {
+            log.Printf("\033[1;31;1m * Failed to connect to the database: %v\033[0m", err)
+            time.Sleep(1 * time.Second)
+            continue
+        }
+        defer db.Close()
+        break
+    }
+	
 	// Create a new router
 	r := mux.NewRouter()
 
