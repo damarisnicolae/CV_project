@@ -2,6 +2,7 @@
 
 This project provides a platform for managing user data and generating custom CV templates.
 
+## Directory structure Hierarchy
 ```sh
 CV_project
 ├── api                                 # Go API         - backend
@@ -32,6 +33,11 @@ CV_project
 ├── docker-compose.yml                  # Docker Compose configuration
 ├── .env                                # Environment variables file                                
 ├── .gitignore                          # Git ignore     - version control
+├── .github                             # GitHub configuration directory
+│   └── workflows                       # GitHub Actions workflows
+│       ├── integration-tests.yml       # Workflow for integration tests
+│       ├── unit-tests.yml              # Workflow for unit tests
+│       └── venom-tests.yml             # Workflow for venom tests
 ├── Makefile                            # Building and running
 ├── README.md                           # Project documentation
 ├── sql                                 # SQL files      - database schema
@@ -65,7 +71,7 @@ Database (SQL) : Stores user information.
 ## Environment variables file: .env file
 
 ```sh
-MYSQL_ROOT_PASSWORD=CCCvvv@@@222
+MYSQL_ROOT_PASSWORD=***
 MYSQL_PASSWORD= ***
 MYSQL_ROOT_USER=root
 MYSQL_USER= ***
@@ -73,16 +79,6 @@ MYSQL_ADDR=cv_db-container
 MYSQL_HOST=localhost
 MYSQL_DATABASE=users
 MYSQL_PORT=3306
-
-DB_PROJECT=CV_project
-DB_ROOT_PASSWORD= ***
-DB_PASSWORD= ***
-DB_USER=cristy
-DB_ROOT_USER=root
-DB_ADDR=cv_db-container
-DB_DATABASE=users
-DB_HOST=
-DB_PORT=3306
 ```
 
 ## Install Basic Tools:
