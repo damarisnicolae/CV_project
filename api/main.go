@@ -21,7 +21,7 @@ import (
 	wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 )
 
-var db *sql.DB
+var Db *sql.DB
 
 type User struct {
 	ID             int64
@@ -48,14 +48,14 @@ type Template struct {
 	Path string
 }
 
-var cookieHandler = securecookie.New(
+var CookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(64), // this key is used for signing
 	securecookie.GenerateRandomKey(32), // this key is used for encryption
 )
 
-func verifyLogin(username, password string) bool {
+func VerifyLogin(username, password string) bool {
 	var hashedPassword string
-	err := db.QueryRow("SELECT password FROM userlogin WHERE username = ?", username).Scan(&hashedPassword)
+	err := Db.QueryRow("SELECT password FROM userlogin WHERE username = ?", username).Scan(&hashedPassword)
 	if err != nil {
 		return false
 	}
@@ -64,12 +64,12 @@ func verifyLogin(username, password string) bool {
 	return err == nil
 }
 
-func setSession(userName string, w http.ResponseWriter) {
+func SetSession(userName string, w http.ResponseWriter) {
 	value := map[string]string{
 		"name": userName,
 	}
 
-	if encoded, err := cookieHandler.Encode("session", value); err == nil {
+	if encoded, err := CookieHandler.Encode("session", value); err == nil {
 		cookie := &http.Cookie{
 			Name:  "session",
 			Value: encoded,
@@ -79,7 +79,7 @@ func setSession(userName string, w http.ResponseWriter) {
 	}
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request) {
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -95,16 +95,17 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		Username: username,
 	}
 
-	if verifyLogin(username, password) {
+	if VerifyLogin(username, password) {
 		w.Header().Set("Content-Type", "application/json")
-		setSession(username, w)
+		SetSession(username, w)
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(response)
+	} else {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 	}
-
 }
 
-func logoutHandler(w http.ResponseWriter, r *http.Request) {
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	//clear session
 	cookie := &http.Cookie{
 		Name:   "session",
@@ -118,7 +119,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("User logout successfully"))
 }
 
-func signupHandler(w http.ResponseWriter, r *http.Request) {
+func SignupHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -139,7 +140,7 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = db.Exec("INSERT INTO userlogin (username, password) VALUES (?,?)", email, hashedPassword)
+	_, err = Db.Exec("INSERT INTO userlogin (username, password) VALUES (?,?)", email, hashedPassword)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -149,15 +150,15 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("User signup successfully"))
 }
 
-func homeUsers(w http.ResponseWriter, r *http.Request) {
+func HomeUsers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		w.WriteHeader(405)
+		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte("Method Not Allowed"))
 		return
 	}
 
 	var users []User
-	rows, err := db.Query("SELECT id, firstname, lastname, email FROM users")
+	rows, err := Db.Query("SELECT id, firstname, lastname, email FROM users")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -175,14 +176,14 @@ func homeUsers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(users)
 }
 
-func home(w http.ResponseWriter, r *http.Request) {
+func Home(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method Not Allowed"))
 		return
 	}
 
-	rows, err := db.Query("SELECT id, jobtitle, firstname, lastname, email, phone, address, city, country, postalcode, dateofbirth, nationality, summary, workexperience, education, skills, languages FROM users")
+	rows, err := Db.Query("SELECT id, jobtitle, firstname, lastname, email, phone, address, city, country, postalcode, dateofbirth, nationality, summary, workexperience, education, skills, languages FROM users")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -203,7 +204,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(users)
 }
 
-func showUser(w http.ResponseWriter, r *http.Request) {
+func ShowUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method Not Allowed"))
@@ -211,7 +212,7 @@ func showUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user User
-	row := db.QueryRow("SELECT * FROM users WHERE id = ?", 1)
+	row := Db.QueryRow("SELECT * FROM users WHERE id = ?", 1)
 	if err := row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages); err != nil {
 		if err == sql.ErrNoRows {
 			http.NotFound(w, r)
@@ -225,7 +226,7 @@ func showUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
-func createUser(w http.ResponseWriter, r *http.Request) {
+func CreateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method Not Allowed"))
@@ -239,7 +240,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Insert the user into the database
-	_, err := db.Exec("INSERT INTO users (Jobtitle, Firstname, Lastname, Email, Phone, Address, City, Country, Postalcode, Dateofbirth, Nationality, Summary, Workexperience, Education, Skills, Languages) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	_, err := Db.Exec("INSERT INTO users (Jobtitle, Firstname, Lastname, Email, Phone, Address, City, Country, Postalcode, Dateofbirth, Nationality, Summary, Workexperience, Education, Skills, Languages) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		user.Jobtitle, user.Firstname, user.Lastname, user.Email, user.Phone, user.Address, user.City, user.Country, user.Postalcode, user.Dateofbirth, user.Nationality, user.Summary, user.Workexperience, user.Education, user.Skills, user.Languages)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -250,7 +251,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("User created successfully"))
 }
 
-func updateUser(w http.ResponseWriter, r *http.Request) {
+func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "PUT" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method Not Allowed"))
@@ -271,7 +272,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the user exists
-	_, err = db.Exec("UPDATE users SET jobtitle=?, first_name=?, last_name=?, email=?, phone=?, address=?, city=?, country=?, postal_code=?, date_of_birth=?, nationality=?, summary=?, work_experience=?, education=?, skills=?, languages=? WHERE id=?",
+	_, err = Db.Exec("UPDATE users SET jobtitle=?, first_name=?, last_name=?, email=?, phone=?, address=?, city=?, country=?, postal_code=?, date_of_birth=?, nationality=?, summary=?, work_experience=?, education=?, skills=?, languages=? WHERE id=?",
 		user.Jobtitle, user.Firstname, user.Lastname, user.Email, user.Phone, user.Address, user.City, user.Country, user.Postalcode, user.Dateofbirth, user.Nationality, user.Summary, user.Workexperience, user.Education, user.Skills, user.Languages, id)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -284,7 +285,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
-func deleteUser(w http.ResponseWriter, r *http.Request) {
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "DELETE" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method Not Allowed"))
@@ -304,7 +305,7 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stmt, err := db.Prepare("DELETE FROM users WHERE id = ?")
+	stmt, err := Db.Prepare("DELETE FROM users WHERE id = ?")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error preparing delete statement: %v", err)
@@ -322,7 +323,7 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func generateTemplate(w http.ResponseWriter, r *http.Request) {
+func GenerateTemplate(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	template_id := query["template"]
 	user_id := query["user"]
@@ -341,12 +342,11 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 	var template Template
 
 	// Get the path of the template
-	row1 := db.QueryRow("SELECT Path FROM template WHERE id = ?", idtemplate_int)
+	row1 := Db.QueryRow("SELECT Path FROM template WHERE id = ?", idtemplate_int)
 	row1.Scan(&template.Path)
-	row := db.QueryRow("SELECT * FROM users WHERE id = ?", iduser_int)
+	row := Db.QueryRow("SELECT * FROM users WHERE id = ?", iduser_int)
 	row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
 
-	
 	htmlContent, err := os.ReadFile(template.Path)
 	if err != nil {
 		panic(err)
@@ -371,22 +371,22 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 	htmlString = strings.ReplaceAll(htmlString, "{{Skills}}", user.Skills)
 	htmlString = strings.ReplaceAll(htmlString, "{{Languages}}", user.Languages)
 
-	// Write 
+	// Write
 	err = os.WriteFile("../bff/templates/populate_template.html", []byte(htmlString), 0644)
 	if err != nil {
 		panic(err)
 	}
-	// Read 
+	// Read
 	populateHtml, err := os.ReadFile("../bff/templates/populate_template.html")
 	if err != nil {
 		log.Fatal(err)
 	}
-	// Create PDF 
+	// Create PDF
 	pdfg, err := wkhtml.NewPDFGenerator()
 	if err != nil {
 		return
 	}
-	// Add HTML page 
+	// Add HTML page
 	pdfg.AddPage(wkhtml.NewPageReader(bytes.NewReader(populateHtml)))
 	// Create the PDF document in memory
 	err = pdfg.Create()
@@ -402,94 +402,98 @@ func generateTemplate(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s, %s", template_id, user_id)
 }
 
-	// * Get the value of an environment variable or return a default value
-func getEnv(key, fallback string) string {
-    if value, exists := os.LookupEnv(key); exists {
-        return value
-    }
-    return fallback
+// * Get the value of an environment variable or return a default value
+func GetEnv(key, fallback string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return fallback
 }
 
- // ? Connection to the database
-func connectToDatabase() (*sql.DB, error) {
-	
-    cfg := mysql.Config{
-        User:                 getEnv("MYSQL_USER", os.Getenv("MYSQL_ROOT_USER")),
-        Passwd:               getEnv("MYSQL_PASSWORD", os.Getenv("MYSQL_ROOT_PASSWORD")),
-        Net:                  "tcp",
-        Addr:                 os.Getenv("MYSQL_HOST") + ":" + os.Getenv("MYSQL_PORT"),
-        DBName:               os.Getenv("MYSQL_DATABASE"),
-        AllowNativePasswords: true,
-    }
+// ? Connection to the database
+func ConnectToDatabase() (*sql.DB, error) {
+	cfg := mysql.Config{
+		User:                 GetEnv("MYSQL_USER", os.Getenv("MYSQL_ROOT_USER")),
+		Passwd:               GetEnv("MYSQL_PASSWORD", os.Getenv("MYSQL_ROOT_PASSWORD")),
+		Net:                  "tcp",
+		Addr:                 os.Getenv("MYSQL_HOST") + ":" + os.Getenv("MYSQL_PORT"),
+		DBName:               os.Getenv("MYSQL_DATABASE"),
+		AllowNativePasswords: true,
+	}
 
 	fmt.Println("\n\033[1;34;1m * * * Establishing connection to the database...")
-	fmt.Printf("\n\033[1;37;1m * Environment variables print fron \033[1;36;1mmain.go:\n\n\033[1;36;1m")
-    fmt.Printf("	User:          ➮ %s \n", cfg.User)
-	fmt.Printf("	Password:      ➮ %s*pass*%s \n", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
-    fmt.Printf("	Address:       ➮ %s \n", cfg.Addr)
-    fmt.Printf("	Database Name: ➮ %s \n\n", cfg.DBName)
+	fmt.Printf("\n\033[1;37;1m * Environment variables print from \033[1;36;1mmain.go:\n\n\033[1;36;1m")
+	fmt.Printf("	User:		  ➮ %s \n", cfg.User)
+	fmt.Printf("	Password:	  ➮ %s*pass*%s \n", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
+	fmt.Printf("	Address:	   ➮ %s \n", cfg.Addr)
+	fmt.Printf("	Database Name: ➮ %s \n\n", cfg.DBName)
 
-    dsn := cfg.FormatDSN()
-    maskedPasswd := fmt.Sprintf("%s*pass*%s", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
-    maskedDSN := fmt.Sprintf("%s:%s@tcp(%s)/%s?%s", cfg.User, maskedPasswd, cfg.Addr, cfg.DBName, dsn[strings.Index(dsn, "?")+1:])
-    fmt.Printf("	DSN:          \033[1;36;5m ➮ %s\033[0m\n", maskedDSN)
+	dsn := cfg.FormatDSN()
+	maskedPasswd := fmt.Sprintf("%s*pass*%s", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
+	maskedDSN := fmt.Sprintf("%s:%s@tcp(%s)/%s?%s", cfg.User, maskedPasswd, cfg.Addr, cfg.DBName, dsn[strings.Index(dsn, "?")+1:])
+	fmt.Printf("	DSN:		  \033[1;36;5m ➮ %s\033[0m\n", maskedDSN)
 
-    fmt.Println("\n * Opening database connection...")
-    db, err := sql.Open("mysql", dsn)
-    if err != nil {
-        fmt.Println("Error connection:", err)
-        return nil, err
-    }
+	fmt.Println("\n * Opening database connection...")
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		fmt.Println("Error connecting:", err)
+		return nil, err
+	}
 
-    fmt.Println(" * Pinging DB...")
-    if err = db.Ping(); err != nil {
-        fmt.Printf("\033[31m	Error pinging database: %v\033[0m\n", err)
-        db.Close()
-        return nil, err
-    }
+	fmt.Println(" * Pinging DB...")
+	if err = db.Ping(); err != nil {
+		fmt.Printf("\033[31m	Error pinging database: %v\033[0m\n", err)
+		db.Close()
+		return nil, err
+	}
 
-    fmt.Println("\033[1;37;1m * Connecting to database to the address: ➮\033[1;94;1m",cfg.Addr,"\033[0m")
-    return db, nil
+	fmt.Println("\033[1;37;1m * Connecting to database to the address: ➮\033[1;94;1m", cfg.Addr, "\033[0m")
+	return db, nil
 }
-
 
 func main() {
 	var err error
-	
+
 	// Connect to the database, retry if the connection fails
 	for {
-        db, err = connectToDatabase()
-        if err != nil {
-            log.Printf("\033[1;31;1m * Failed to connect to the database: %v\033[0m", err)
-            time.Sleep(1 * time.Second)
-            continue
-        }
-        defer db.Close()
-        break
-    }
-	
+		Db, err = ConnectToDatabase()
+		if err != nil {
+			log.Printf("\033[1;31;1m * Failed to connect to the database: %v\033[0m", err)
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		defer Db.Close()
+		break
+	}
+
+	// Check if Db is initialized
+	if Db == nil {
+		log.Fatalf("\033[1;31;1m * Failed to initialize the database connection.\033[0m")
+	}
+
 	// Create a new router
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", home).Methods("GET")
-	r.HandleFunc("/users", homeUsers).Methods("GET")
-	r.HandleFunc("/user", showUser).Methods("GET")
-	r.HandleFunc("/user", createUser).Methods("POST")
-	r.HandleFunc("/user/{id}", updateUser).Methods("PUT")
-	r.HandleFunc("/user/{id}", deleteUser).Methods("DELETE")
-	r.HandleFunc("/pdf", generateTemplate).Methods("GET")
-	r.HandleFunc("/login", loginHandler).Methods("POST")
-	r.HandleFunc("/signup", signupHandler).Methods("POST")
-	r.HandleFunc("/logout", logoutHandler).Methods("POST")
+	// Define your routes
+	r.HandleFunc("/", Home).Methods("GET")
+	r.HandleFunc("/users", HomeUsers).Methods("GET")
+	r.HandleFunc("/user", ShowUser).Methods("GET")
+	r.HandleFunc("/user", CreateUser).Methods("POST")
+	r.HandleFunc("/user/{id}", UpdateUser).Methods("PUT")
+	r.HandleFunc("/user/{id}", DeleteUser).Methods("DELETE")
+	r.HandleFunc("/pdf", GenerateTemplate).Methods("GET")
+	r.HandleFunc("/login", LoginHandler).Methods("POST")
+	r.HandleFunc("/signup", SignupHandler).Methods("POST")
+	r.HandleFunc("/logout", LogoutHandler).Methods("POST")
 
 	// Health check endpoint
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-        w.WriteHeader(http.StatusOK)
-        w.Write([]byte("API is running"))
-    }).Methods("GET")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("API is running"))
+	}).Methods("GET")
 
 	// Start the HTTP server
-	log.Println("\n\033[1;37;1m * Starting the HTTP server on port:      ➮\033[1;94;1m 8080\033[0m")
+	log.Println("\n\033[1;37;1m * Starting the HTTP server on port:	  ➮\033[1;94;1m 8080\033[0m")
 	if err := http.ListenAndServe(":8080", r); err != nil {
 		log.Fatalf("\n * Failed to start HTTP server: %s\n", err)
 	}
