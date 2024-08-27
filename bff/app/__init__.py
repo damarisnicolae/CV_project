@@ -1,19 +1,19 @@
-from decouple import config
 from flask import Flask
 from flask_bcrypt import Bcrypt
-from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from decouple import config
 
-app = Flask(__name__)
+# initialize flask app
+app = Flask(__name__, template_folder='../templates', static_folder='../static')
+
+# load configuration from environment variable
 app.config.from_object(config("APP_SETTINGS"))
 
+# initialize extensions
 bcrypt = Bcrypt(app)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-# Registering blueprints
-from accounts.views import accounts_bp
-from core.views import core_bp
-
-app.register_blueprint(accounts_bp)
-app.register_blueprint(core_bp)
+# import routes or additional app setup here
+from . import app  

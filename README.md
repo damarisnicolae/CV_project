@@ -211,10 +211,10 @@ ALTER USER 'CV_user'@'localhost' IDENTIFIED BY 'Y0ur_strong_password';
 ```sh
 cd $PathCvProject/api
 go mod tidy
-go build -o CV_project main.go
+go build -o bin/user-service main.go
 export DB_USER="root"
 export DB_PASSWORD="?????????????"
-./CV_project
+./bin/user-service
 ```
 
 <div align="right">
