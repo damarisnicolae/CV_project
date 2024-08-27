@@ -32,7 +32,7 @@ jobs:
       - name: install dependencies
         run: go mod tidy
         working-directory: ./api/tests
-      - name: run integration tests
+      - name: run unit tests
         run: go test -v ./tests/...
         working-directory: ./api/tests
       - name: verify go installation
