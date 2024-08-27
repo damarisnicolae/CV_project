@@ -6,13 +6,13 @@ name: integration tests
 on:
   push:
     paths:
-      - api/**
+      - api/tests/**
       - .github/workflows/integration-tests.yml
     branches:
       - main
   pull_request:
     paths:
-      - api/**
+      - api/tests/**
       - .github/workflows/integration-tests.yml
     branches:
       - main
@@ -24,21 +24,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout code
-        uses: actions/c
+        uses: actions/checkout@v4
       - name: set up go
-        uses: actions/setup-
+        uses: actions/setup-go@v5
         with:
           go-version: 1.22.0
       - name: install dependencies
         run: go mod tidy
-        working-directory: ./api
+        working-directory: ./api/tests
       - name: run integration tests
-        run: go test -v ./test
-        working-directory: ./a
+        run: go test -v ./tests/...
+        working-directory: ./api/tests
       - name: verify go installation
         run: go version
       - name: cache go modules
-        uses: actions/cac
+        uses: actions/cache@v4
         with:
           path: |
             ~/go/pkg/mod
