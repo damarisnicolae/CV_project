@@ -5,14 +5,18 @@ services:
       - ./.env
     build:
       context: ./sql
-    image: cv_db-image:9.0.1-lts # mysql
-    container_name: cv_db-container
+    image: mysql:latest
+    container_name: db
+    networks:
+      - my-network
     ports:
-      - "3307:3306"
+      - "3307:3306" 
+    env_file:
+      - .env
     volumes:
       - ./sql/schemadump.sql:/docker-entrypoint-initdb.d/dump.sql
-      - mysql-data:/var/lib/mysql
-      - ./sql/db_datadir/mysql.cnf:/etc/mysql/my.cnf # /etc/mysql/mysql.conf.d/mysqld.cnf
+      # - db-data:/var/lib/mysql
+      - ./sql/db.cnf:/etc/mysql/my.cnf
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 20s
@@ -51,9 +55,11 @@ services:
     container_name: cv_bff-container
     ports:
       - "5000:5000"
-    depends_on:
-      cv_db-service:
-        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - API_IP="localhost"
+      - API_PORT="8080"
     networks:
           - cv-network
     restart: always

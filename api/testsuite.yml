@@ -1,0 +1,21 @@
+name: APIIntegrationTest
+
+vars:
+  url: http://localhost:8080
+
+testcases:
+- name: GetUsers
+  steps:
+  - type: http
+    method: GET
+    headers:
+       Accept: application/json
+       Content-Type: application/json
+    url: {{.url}}/users
+    assertions:
+    - result.statuscode ShouldEqual 200
+    - result.bodyjson ShouldBeArray
+    - result.bodyjson.users[0] ShouldContainKey id
+    - result.bodyjson.users[0] ShouldContainKey firstname
+    - result.bodyjson.users[0].id ShouldBeNumber
+    - result.bodyjson.users[0].firstname ShouldBeString

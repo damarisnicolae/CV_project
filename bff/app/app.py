@@ -1,5 +1,7 @@
-from flask import Flask, render_template, request, abort
-import requests, json, argparse
+from flask import Flask, render_template, request
+import requests, json, argparse, os
+
+print("Start")
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--ip", help="API IP", default="cv_api_container")
@@ -9,10 +11,14 @@ args = vars(parser.parse_args())
 IP = args["ip"]
 PORT = args["port"]
 
+# value = os.getenv('API_IP')
+
 app = Flask(__name__, template_folder='../templates')
+
 
 @app.route('/', methods=['GET'])
 def home():
+    print("Sunt in /")
     url = f"http://{IP}:{PORT}/users"
     try:
         response = requests.get(url=url)

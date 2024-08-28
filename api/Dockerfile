@@ -1,5 +1,8 @@
 FROM golang:1.22-alpine AS builder
 
+ENV DB_HOST  db
+ENV DB_PORT  3306
+
 WORKDIR /app
 
 COPY go.mod go.sum ./
