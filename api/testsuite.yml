@@ -15,7 +15,7 @@ testcases:
     assertions:
     - result.statuscode ShouldEqual 200
     - result.bodyjson ShouldBeArray
-    - result.bodyjson.users[0] ShouldContainKey id
-    - result.bodyjson.users[0] ShouldContainKey firstname
+    - result.bodyjson.users[0] ShouldContainKey ID
+    - result.bodyjson.users[0] ShouldContainKey Firstname
     - result.bodyjson.users[0].id ShouldBeNumber
     - result.bodyjson.users[0].firstname ShouldBeString
