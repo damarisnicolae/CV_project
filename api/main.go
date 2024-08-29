@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 	"golang.org/x/crypto/bcrypt"

@@ -30,7 +30,14 @@ CREATE TABLE template (
 INSERT INTO users
   (jobtitle, firstname, lastname, email, phone, address, city, country, postalcode, dateofbirth, nationality)
 VALUES
-  ('Inginer Software', 'Anne', 'Ungurean', 'anne_ungurean@yahoo.com', '0727999999', 'Str. Lalelelor, nr.17', 'București', 'Romania', '010001', '1990-11-11', 'română');
+  ('Inginer Software', 'Cristy'  , 'Buliga'    , 'cristybuliga@google.com'    '07076965173', 'Str. Lalelelor'     nr.17' , 'Stei', 'Romania' , '010001' , '1990-11-11', 'română'),
+  ('Inginer Software', 'Damaris' , 'Nicolae'   , 'damarisnicolae@google.com'  '07076965173', 'Str. Trandafirilor' nr.10' , 'Stei', 'Romania' , '010001' , '1990-11-11', 'română'),
+  ('Inginer Software', 'Tabita'  , 'Petruneac' , 'tabitapetruneac@google.com' '07076965173', 'Str. Crizantemelor' nr.5'  , 'Stei', 'Romania' , '010001' , '1990-11-11', 'română'),
+  ('Inginer Software', 'Cezar'   , 'Sandra'    , 'cezarsandra@google.com'     '07076965173', 'Str. Violetei'      nr.3'  , 'Stei', 'Romania' , '010001' , '1990-11-11', 'română'),
+  ('Inginer Software', 'Filip'   , 'Petruneac' , 'filippetruneac@google.com'  '07076965173', 'Str. Bujorilor'     nr.8'  , 'Stei', 'Romania' , '010001' , '1990-11-11', 'română'),
+  ('Inginer Software', 'Delu'    , 'Giurgiu'   , 'deludelu@google.com'        '07076965173', 'Str. Magnoliei'     nr.12' , 'Stei', 'Romania' , '010001' , '1990-11-11', 'română'),
+  ('Inginer Software', 'Robert'  , 'Oros'      , 'robertoros@google.com'      '07076965173', 'Str. Zambilelor'    nr.4'  , 'Stei', 'Romania' , '010001' , '1990-11-11', 'română'),
+  ('Inginer Software', 'Lois'    , 'Nicoras'   , 'loisnicoras@google.com'     '07076965173', 'Str. Garoafelor'    nr.9'  , 'Stei', 'Romania' , '010001' , '1990-11-11', 'română'),
 
 INSERT INTO template
   (path)
@@ -38,3 +45,9 @@ VALUES
   ('./template1.html'),
   ('./template2.html'),
   ('./template3.html');
+
+  
+  
+  
+
+

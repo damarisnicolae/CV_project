@@ -11,7 +11,7 @@ testcases:
     headers:
        Accept: application/json
        Content-Type: application/json
-    url: {{.url}}/users
+    url: "{{.url}}/users"
     assertions:
     - result.statuscode ShouldEqual 200
     - result.bodyjson ShouldBeArray

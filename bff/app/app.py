@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, abort, jsonify, render_template, request
 import requests, json, argparse, os
 
 print("Start")
@@ -111,5 +111,23 @@ def signupuser():
         r = requests.post(f'http://{IP}:{PORT}/signup', request.form, headers=request.headers)
         return render_template('view/home.html')
     
+@app.route('/user/<int:id>', methods=['DELETE'])
+def delete_user(id):
+    url = f"http://{IP}:{PORT}/user/{id}"
+    app.logger.info(f"Sending DELETE request to {url}")
+    try:
+        response = requests.delete(url)
+        response.raise_for_status()  # Raise an HTTPError for bad responses
+        app.logger.info(f"Successfully deleted user with ID {id}")
+    except requests.exceptions.HTTPError as http_err:
+        app.logger.error(f"HTTP error occurred: {http_err}")
+        return jsonify({'error': 'User deletion failed', 'details': str(http_err)}), 500
+    except requests.exceptions.RequestException as req_err:
+        app.logger.error(f"Request error occurred: {req_err}")
+        return jsonify({'error': 'User deletion failed', 'details': str(req_err)}), 500
+    return '', 204
+
+
 if __name__=='__main__': 
     app.run(host='0.0.0.0', port=5000, debug=True)
+    
