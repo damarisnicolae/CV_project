@@ -423,10 +423,10 @@ func ConnectToDatabase() (*sql.DB, error) {
 
 	fmt.Println("\n\033[1;34;1m * * * Establishing connection to the database...")
 	fmt.Printf("\n\033[1;37;1m * Environment variables print from \033[1;36;1mmain.go:\n\n\033[1;36;1m")
-	fmt.Printf("	User:		  ➮ %s \n", cfg.User)
-	fmt.Printf("	Password:	  ➮ %s*pass*%s \n", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
+	fmt.Printf("	User:		   ➮ %s \n", cfg.User)
+	fmt.Printf("	Password:	   ➮ %s*pass*%s \n", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
 	fmt.Printf("	Address:	   ➮ %s \n", cfg.Addr)
-	fmt.Printf("	Database Name: ➮ %s \n\n", cfg.DBName)
+	fmt.Printf("	Database Name:     ➮ %s \n\n", cfg.DBName)
 
 	dsn := cfg.FormatDSN()
 	maskedPasswd := fmt.Sprintf("%s*pass*%s", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
