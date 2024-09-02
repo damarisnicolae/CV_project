@@ -17,5 +17,5 @@ testcases:
     - result.bodyjson ShouldBeArray
     - result.bodyjson.users[0] ShouldContainKey ID
     - result.bodyjson.users[0] ShouldContainKey Firstname
-    - result.bodyjson.users[0].id ShouldBeNumber
-    - result.bodyjson.users[0].firstname ShouldBeString
+    - result.bodyjson.users[0].ID ShouldBeNumber
+    - result.bodyjson.users[0].Firstname ShouldBeString

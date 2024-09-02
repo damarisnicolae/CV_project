@@ -11,7 +11,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
@@ -21,6 +20,11 @@ import (
 
 	wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 )
+
+type App struct {
+	DB     *sql.DB
+	Logger *log.Logger
+}
 
 var Db *sql.DB
 
@@ -177,16 +181,13 @@ func HomeUsers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(users)
 }
 
-func Home(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		w.WriteHeader(405)
-		w.Write([]byte("Method Not Allowed"))
-		return
-	}
+func (app *App) Home(w http.ResponseWriter, r *http.Request) {
+	app.Logger.Println("Received request for /")
 
-	rows, err := Db.Query("SELECT id, jobtitle, firstname, lastname, email, phone, address, city, country, postalcode, dateofbirth, nationality, summary, workexperience, education, skills, languages FROM users")
+	rows, err := app.DB.Query("SELECT id, jobtitle, firstname, lastname, email, phone, address, city, country, postalcode, dateofbirth, nationality, summary, workexperience, education, skills, languages FROM users")
 	if err != nil {
-		log.Fatal(err)
+		app.Logger.Println("Error querying database: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	defer rows.Close()
 
@@ -196,7 +197,9 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		var user User
 		err := rows.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
 		if err != nil {
-			log.Fatal(err)
+			app.Logger.Println("Error scanning row: ", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		users = append(users, user)
 	}
@@ -453,22 +456,29 @@ func ConnectToDatabase() (*sql.DB, error) {
 }
 
 func main() {
-	var err error
+	// Open a database connection, retry if the connection fails
+	// for {
+	db, err := sql.Open("mysql", "damaris:damarisub@tcp(127.0.0.1:3306)/users")
+	if err != nil {
+		log.Printf("\033[1;31;1m * Failed to connect to the database: %v\033[0m", err)
+		// time.Sleep(1 * time.Second)
+		// continue
+		// }
+		// defer db.Close()
+		// break
+	}
 
-	// Connect to the database, retry if the connection fails
-	for {
-		Db, err = ConnectToDatabase()
-		if err != nil {
-			log.Printf("\033[1;31;1m * Failed to connect to the database: %v\033[0m", err)
-			time.Sleep(1 * time.Second)
-			continue
-		}
-		defer Db.Close()
-		break
+	//Initialize the logger
+	logger := log.New(os.Stdout, "INFO", log.Ldate|log.Ltime|log.Lshortfile)
+
+	//Create an instance of the App struct
+	app := &App{
+		DB:     db,
+		Logger: logger,
 	}
 
 	// Check if Db is initialized
-	if Db == nil {
+	if db == nil {
 		log.Fatalf("\033[1;31;1m * Failed to initialize the database connection.\033[0m")
 	}
 
@@ -476,7 +486,7 @@ func main() {
 	r := mux.NewRouter()
 
 	// Define your routes
-	r.HandleFunc("/", Home).Methods("GET")
+	r.HandleFunc("/", app.Home).Methods("GET")
 	r.HandleFunc("/users", HomeUsers).Methods("GET")
 	r.HandleFunc("/user", ShowUser).Methods("GET")
 	r.HandleFunc("/user", CreateUser).Methods("POST")
@@ -494,7 +504,7 @@ func main() {
 	}).Methods("GET")
 
 	// Start the HTTP server
-	log.Println("\n\033[1;37;1m * Starting the HTTP server on port:	  ➮\033[1;94;1m 8080\033[0m")
+	app.Logger.Println("\n\033[1;37;1m * Starting the HTTP server on port:	  ➮\033[1;94;1m 8080\033[0m")
 	if err := http.ListenAndServe(":8080", r); err != nil {
 		log.Fatalf("\n * Failed to start HTTP server: %s\n", err)
 	}
