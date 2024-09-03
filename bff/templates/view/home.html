@@ -30,9 +30,8 @@
                 <td>{{ user.Lastname }}</td>
                 <td>{{ user.Email }}</td>
                 <td>
-                    <input type="hidden" class="userId" value="{{ user.ID }}">
-                    <button onclick="deleteUser({{user.ID}})" id="delete-button">DELETE</button>
-                    <button onclick="updateUser({{user.ID}})" id="update-button">UPDATE</button>
+                    <button class="delete-button" data-user-id="{{user.ID}}">DELETE</button>
+                    <button class="update-button" data-user-id="{{user.ID}}">UPDATE</button>
                 </td>
             </tr>
             {% endfor %}
@@ -83,6 +82,13 @@
             button.addEventListener('click', function() {
                 const userId = this.getAttribute('data-user-id');
                 deleteUser(userId);
+            });
+        });
+
+        document.querySelectorAll('.update-button').forEach(button => {
+            button.addEventListener('click', function () {
+                const userId = this.getAttribute('data-user-id');
+                updateUser(userId);
             });
         });
     });
