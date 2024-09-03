@@ -13,7 +13,6 @@ import (
 	"strings"
 
 	"github.com/go-sql-driver/mysql"
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 	"golang.org/x/crypto/bcrypt"
@@ -58,7 +57,7 @@ var CookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(32), // this key is used for encryption
 )
 
-func VerifyLogin(username, password string) bool {
+func (app *App) VerifyLogin(username, password string) bool {
 	var hashedPassword string
 	err := Db.QueryRow("SELECT password FROM userlogin WHERE username = ?", username).Scan(&hashedPassword)
 	if err != nil {
@@ -69,7 +68,7 @@ func VerifyLogin(username, password string) bool {
 	return err == nil
 }
 
-func SetSession(userName string, w http.ResponseWriter) {
+func (app *App) SetSession(userName string, w http.ResponseWriter) {
 	value := map[string]string{
 		"name": userName,
 	}
@@ -84,7 +83,7 @@ func SetSession(userName string, w http.ResponseWriter) {
 	}
 }
 
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+func (app *App) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -100,9 +99,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Username: username,
 	}
 
-	if VerifyLogin(username, password) {
+	if app.VerifyLogin(username, password) {
 		w.Header().Set("Content-Type", "application/json")
-		SetSession(username, w)
+		app.SetSession(username, w)
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(response)
 	} else {
@@ -110,7 +109,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+func (app *App) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	//clear session
 	cookie := &http.Cookie{
 		Name:   "session",
@@ -124,7 +123,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("User logout successfully"))
 }
 
-func SignupHandler(w http.ResponseWriter, r *http.Request) {
+func (app *App) SignupHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -155,7 +154,7 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("User signup successfully"))
 }
 
-func HomeUsers(w http.ResponseWriter, r *http.Request) {
+func (app *App) HomeUsers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte("Method Not Allowed"))
@@ -182,55 +181,62 @@ func HomeUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) Home(w http.ResponseWriter, r *http.Request) {
-	app.Logger.Println("Received request for /")
+    if r.Method != http.MethodGet {
+        http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+        return
+    }
 
-	rows, err := app.DB.Query("SELECT id, jobtitle, firstname, lastname, email, phone, address, city, country, postalcode, dateofbirth, nationality, summary, workexperience, education, skills, languages FROM users")
-	if err != nil {
-		app.Logger.Println("Error querying database: ", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	defer rows.Close()
+    app.Logger.Println("Received request for /")
 
-	var users []User
+    rows, err := app.DB.Query("SELECT id, jobtitle, firstname, lastname, email, phone, address, city, country, postalcode, dateofbirth, nationality, summary, workexperience, education, skills, languages FROM users")
+    if err != nil {
+        app.Logger.Println("Error querying database: ", err)
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    defer rows.Close()
 
-	for rows.Next() {
-		var user User
-		err := rows.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
-		if err != nil {
-			app.Logger.Println("Error scanning row: ", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		users = append(users, user)
-	}
+    var users []User
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(users)
+    for rows.Next() {
+        var user User
+        err := rows.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
+        if err != nil {
+            app.Logger.Println("Error scanning row: ", err)
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+        users = append(users, user)
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(users)
 }
 
-func ShowUser(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		w.WriteHeader(405)
-		w.Write([]byte("Method Not Allowed"))
-		return
-	}
+func (app *App) ShowUser(w http.ResponseWriter, r *http.Request) {
+    if r.Method != "GET" {
+        w.WriteHeader(405)
+        w.Write([]byte("Method Not Allowed"))
+        return
+    }
 
-	var user User
-	row := Db.QueryRow("SELECT * FROM users WHERE id = ?", 1)
-	if err := row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages); err != nil {
-		if err == sql.ErrNoRows {
-			http.NotFound(w, r)
-			return
-		}
-		http.Error(w, fmt.Sprintf("Error fetching user data: %v", err), http.StatusInternalServerError)
-		return
-	}
+    var user User
+    row := app.DB.QueryRow("SELECT * FROM users WHERE id = ?", 1)
+    if err := row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages); err != nil {
+        if err == sql.ErrNoRows {
+            http.NotFound(w, r)
+            return
+        }
+        http.Error(w, fmt.Sprintf("Error fetching user data: %v", err), http.StatusInternalServerError)
+        return
+    }
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(user)
 }
 
-func CreateUser(w http.ResponseWriter, r *http.Request) {
+
+func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method Not Allowed"))
@@ -255,7 +261,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("User created successfully"))
 }
 
-func UpdateUser(w http.ResponseWriter, r *http.Request) {
+func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "PUT" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method Not Allowed"))
@@ -289,7 +295,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
-func DeleteUser(w http.ResponseWriter, r *http.Request) {
+func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "DELETE" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method Not Allowed"))
@@ -327,7 +333,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func GenerateTemplate(w http.ResponseWriter, r *http.Request) {
+func (app *App) GenerateTemplate(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	template_id := query["template"]
 	user_id := query["user"]
@@ -407,7 +413,7 @@ func GenerateTemplate(w http.ResponseWriter, r *http.Request) {
 }
 
 // * Get the value of an environment variable or return a default value
-func GetEnv(key, fallback string) string {
+func (app *App) GetEnv(key, fallback string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
 	}
@@ -415,45 +421,53 @@ func GetEnv(key, fallback string) string {
 }
 
 // ? Connection to the database
-func ConnectToDatabase() (*sql.DB, error) {
-	cfg := mysql.Config{
-		User:                 GetEnv("MYSQL_USER", os.Getenv("MYSQL_ROOT_USER")),
-		Passwd:               GetEnv("MYSQL_PASSWORD", os.Getenv("MYSQL_ROOT_PASSWORD")),
-		Net:                  "tcp",
-		Addr:                 os.Getenv("MYSQL_HOST") + ":" + os.Getenv("MYSQL_PORT"),
-		DBName:               os.Getenv("MYSQL_DATABASE"),
-		AllowNativePasswords: true,
-	}
+func (app *App) ConnectToDatabase() (*sql.DB, error) {
+    getEnv := func(key, fallback string) string {
+        if value, exists := os.LookupEnv(key); exists {
+            return value
+        }
+        return fallback
+    }
 
-	fmt.Println("\n\033[1;34;1m * * * Establishing connection to the database...")
-	fmt.Printf("\n\033[1;37;1m * Environment variables print from \033[1;36;1mmain.go:\n\n\033[1;36;1m")
-	fmt.Printf("	User:		   ➮ %s \n", cfg.User)
-	fmt.Printf("	Password:	   ➮ %s*pass*%s \n", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
-	fmt.Printf("	Address:	   ➮ %s \n", cfg.Addr)
-	fmt.Printf("	Database Name:     ➮ %s \n\n", cfg.DBName)
+    cfg := mysql.Config{
+        User:                 getEnv("MYSQL_USER", getEnv("MYSQL_ROOT_USER", "")),
+        Passwd:               getEnv("MYSQL_PASSWORD", getEnv("MYSQL_ROOT_PASSWORD", "")),
+        Net:                  "tcp",
+        Addr:                 getEnv("MYSQL_HOST", "localhost") + ":" + getEnv("MYSQL_PORT", "3306"),
+        DBName:               getEnv("MYSQL_DATABASE", ""),
+        AllowNativePasswords: true,
+    }
 
-	dsn := cfg.FormatDSN()
-	maskedPasswd := fmt.Sprintf("%s*pass*%s", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
-	maskedDSN := fmt.Sprintf("%s:%s@tcp(%s)/%s?%s", cfg.User, maskedPasswd, cfg.Addr, cfg.DBName, dsn[strings.Index(dsn, "?")+1:])
-	fmt.Printf("	DSN:		  \033[1;36;5m ➮ %s\033[0m\n", maskedDSN)
+    fmt.Println("\n\033[1;34;1m * * * Establishing connection to the database...")
+    fmt.Printf("\n\033[1;37;1m * Environment variables print from \033[1;36;1mmain.go:\n\n\033[1;36;1m")
+    fmt.Printf("	User:		   ➮ %s \n", cfg.User)
+    fmt.Printf("	Password:	   ➮ %s*pass*%s \n", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
+    fmt.Printf("	Address:	   ➮ %s \n", cfg.Addr)
+    fmt.Printf("	Database Name:     ➮ %s \n\n", cfg.DBName)
 
-	fmt.Println("\n * Opening database connection...")
-	db, err := sql.Open("mysql", dsn)
-	if err != nil {
-		fmt.Println("Error connecting:", err)
-		return nil, err
-	}
+    dsn := cfg.FormatDSN()
+    maskedPasswd := fmt.Sprintf("%s*pass*%s", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
+    maskedDSN := fmt.Sprintf("%s:%s@tcp(%s)/%s?%s", cfg.User, maskedPasswd, cfg.Addr, cfg.DBName, dsn[strings.Index(dsn, "?")+1:])
+    fmt.Printf("	DSN:		  \033[1;36;5m ➮ %s\033[0m\n", maskedDSN)
 
-	fmt.Println(" * Pinging DB...")
-	if err = db.Ping(); err != nil {
-		fmt.Printf("\033[31m	Error pinging database: %v\033[0m\n", err)
-		db.Close()
-		return nil, err
-	}
+    fmt.Println("\n * Opening database connection...")
+    db, err := sql.Open("mysql", dsn)
+    if err != nil {
+        fmt.Println("Error connecting:", err)
+        return nil, err
+    }
 
-	fmt.Println("\033[1;37;1m * Connecting to database to the address: ➮\033[1;94;1m", cfg.Addr, "\033[0m")
-	return db, nil
+    fmt.Println(" * Pinging DB...")
+    if err = db.Ping(); err != nil {
+        fmt.Printf("\033[31m	Error pinging database: %v\033[0m\n", err)
+        db.Close()
+        return nil, err
+    }
+
+    fmt.Println("\033[1;37;1m * Connecting to database to the address: ➮\033[1;94;1m", cfg.Addr, "\033[0m")
+    return db, nil
 }
+
 
 func main() {
 	// Open a database connection, retry if the connection fails
@@ -487,15 +501,15 @@ func main() {
 
 	// Define your routes
 	r.HandleFunc("/", app.Home).Methods("GET")
-	r.HandleFunc("/users", HomeUsers).Methods("GET")
-	r.HandleFunc("/user", ShowUser).Methods("GET")
-	r.HandleFunc("/user", CreateUser).Methods("POST")
-	r.HandleFunc("/user/{id}", UpdateUser).Methods("PUT")
-	r.HandleFunc("/user/{id}", DeleteUser).Methods("DELETE")
-	r.HandleFunc("/pdf", GenerateTemplate).Methods("GET")
-	r.HandleFunc("/login", LoginHandler).Methods("POST")
-	r.HandleFunc("/signup", SignupHandler).Methods("POST")
-	r.HandleFunc("/logout", LogoutHandler).Methods("POST")
+	r.HandleFunc("/users", app.HomeUsers).Methods("GET")
+	r.HandleFunc("/user", app.ShowUser).Methods("GET")
+	r.HandleFunc("/user", app.CreateUser).Methods("POST")
+	r.HandleFunc("/user/{id}", app.UpdateUser).Methods("PUT")
+	r.HandleFunc("/user/{id}", app.DeleteUser).Methods("DELETE")
+	r.HandleFunc("/pdf", app.GenerateTemplate).Methods("GET")
+	r.HandleFunc("/login", app.LoginHandler).Methods("POST")
+	r.HandleFunc("/signup", app.SignupHandler).Methods("POST")
+	r.HandleFunc("/logout", app.LogoutHandler).Methods("POST")
 
 	// Health check endpoint
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
