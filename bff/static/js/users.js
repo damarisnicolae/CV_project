@@ -24,7 +24,10 @@ function deleteUser(userId) {
         console.error('There was a problem with the fetch operation:', error.message);
     });
 }
-document.getElementById('delete-button').addEventListener('click', deleteUser() {
-    const userId = this.getAttribute('data-user-id');
-    deleteUser(userId);
+
+document.querySelectorAll('.delete-button').forEach(button => {
+    button.addEventListener('click', function() {
+        const userId = this.getAttribute('data-user-id');
+        deleteUser(userId);
+    });
 });
