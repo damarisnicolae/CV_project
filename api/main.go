@@ -11,12 +11,10 @@ import (
 	"os"
 	"strconv"
 	"strings"
-
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 	"golang.org/x/crypto/bcrypt"
-
 	wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 )
 
@@ -181,60 +179,59 @@ func (app *App) HomeUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) Home(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodGet {
-        http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-        return
-    }
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-    app.Logger.Println("Received request for /")
+	app.Logger.Println("Received request for /")
 
-    rows, err := app.DB.Query("SELECT id, jobtitle, firstname, lastname, email, phone, address, city, country, postalcode, dateofbirth, nationality, summary, workexperience, education, skills, languages FROM users")
-    if err != nil {
-        app.Logger.Println("Error querying database: ", err)
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
-    defer rows.Close()
+	rows, err := app.DB.Query("SELECT id, jobtitle, firstname, lastname, email, phone, address, city, country, postalcode, dateofbirth, nationality, summary, workexperience, education, skills, languages FROM users")
+	if err != nil {
+		app.Logger.Println("Error querying database: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
 
-    var users []User
+	var users []User
 
-    for rows.Next() {
-        var user User
-        err := rows.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
-        if err != nil {
-            app.Logger.Println("Error scanning row: ", err)
-            http.Error(w, err.Error(), http.StatusInternalServerError)
-            return
-        }
-        users = append(users, user)
-    }
+	for rows.Next() {
+		var user User
+		err := rows.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
+		if err != nil {
+			app.Logger.Println("Error scanning row: ", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		users = append(users, user)
+	}
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(users)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
 }
 
 func (app *App) ShowUser(w http.ResponseWriter, r *http.Request) {
-    if r.Method != "GET" {
-        w.WriteHeader(405)
-        w.Write([]byte("Method Not Allowed"))
-        return
-    }
+	if r.Method != "GET" {
+		w.WriteHeader(405)
+		w.Write([]byte("Method Not Allowed"))
+		return
+	}
 
-    var user User
-    row := app.DB.QueryRow("SELECT * FROM users WHERE id = ?", 1)
-    if err := row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages); err != nil {
-        if err == sql.ErrNoRows {
-            http.NotFound(w, r)
-            return
-        }
-        http.Error(w, fmt.Sprintf("Error fetching user data: %v", err), http.StatusInternalServerError)
-        return
-    }
+	var user User
+	row := app.DB.QueryRow("SELECT * FROM users WHERE id = ?", 1)
+	if err := row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages); err != nil {
+		if err == sql.ErrNoRows {
+			http.NotFound(w, r)
+			return
+		}
+		http.Error(w, fmt.Sprintf("Error fetching user data: %v", err), http.StatusInternalServerError)
+		return
+	}
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(user)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
 }
-
 
 func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
@@ -412,7 +409,7 @@ func (app *App) GenerateTemplate(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s, %s", template_id, user_id)
 }
 
-// * Get the value of an environment variable or return a default value
+//* get environment variables
 func (app *App) GetEnv(key, fallback string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
@@ -420,106 +417,94 @@ func (app *App) GetEnv(key, fallback string) string {
 	return fallback
 }
 
-// ? Connection to the database
+//* connection to the database
 func (app *App) ConnectToDatabase() (*sql.DB, error) {
-    getEnv := func(key, fallback string) string {
-        if value, exists := os.LookupEnv(key); exists {
-            return value
-        }
-        return fallback
-    }
+	getEnv := func(key, fallback string) string {
+		if value, exists := os.LookupEnv(key); exists {
+			return value
+		}
+		return fallback
+	}
 
-    cfg := mysql.Config{
-        User:                 getEnv("MYSQL_USER", getEnv("MYSQL_ROOT_USER", "")),
-        Passwd:               getEnv("MYSQL_PASSWORD", getEnv("MYSQL_ROOT_PASSWORD", "")),
-        Net:                  "tcp",
-        Addr:                 getEnv("MYSQL_HOST", "localhost") + ":" + getEnv("MYSQL_PORT", "3306"),
-        DBName:               getEnv("MYSQL_DATABASE", ""),
-        AllowNativePasswords: true,
-    }
+	cfg := mysql.Config{
+		User:                 getEnv("MYSQL_USER", getEnv("MYSQL_ROOT_USER", "")),
+		Passwd:               getEnv("MYSQL_PASSWORD", getEnv("MYSQL_ROOT_PASSWORD", "")),
+		Net:                  "tcp",
+		Addr:                 getEnv("MYSQL_HOST", "localhost") + ":" + getEnv("MYSQL_PORT", "3306"),
+		DBName:               getEnv("MYSQL_DATABASE", ""),
+		AllowNativePasswords: true,
+	}
 
-    fmt.Println("\n\033[1;34;1m * * * Establishing connection to the database...")
-    fmt.Printf("\n\033[1;37;1m * Environment variables print from \033[1;36;1mmain.go:\n\n\033[1;36;1m")
-    fmt.Printf("	User:		   ➮ %s \n", cfg.User)
-    fmt.Printf("	Password:	   ➮ %s*pass*%s \n", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
-    fmt.Printf("	Address:	   ➮ %s \n", cfg.Addr)
-    fmt.Printf("	Database Name:     ➮ %s \n\n", cfg.DBName)
+	fmt.Println("\n\033[1;34;1m * * * Establishing connection to the database...")
+	fmt.Printf("\n\033[1;37;1m * Environment variables print from \033[1;36;1mmain.go:\n\n\033[1;36;1m")
+	fmt.Printf("	User:		   ➮ %s \n", cfg.User)
+	fmt.Printf("	Password:	   ➮ %s*pass*%s \n", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
+	fmt.Printf("	Address:	   ➮ %s \n", cfg.Addr)
+	fmt.Printf("	Database Name:     ➮ %s \n\n", cfg.DBName)
 
-    dsn := cfg.FormatDSN()
-    maskedPasswd := fmt.Sprintf("%s*pass*%s", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
-    maskedDSN := fmt.Sprintf("%s:%s@tcp(%s)/%s?%s", cfg.User, maskedPasswd, cfg.Addr, cfg.DBName, dsn[strings.Index(dsn, "?")+1:])
-    fmt.Printf("	DSN:		  \033[1;36;5m ➮ %s\033[0m\n", maskedDSN)
+	dsn := cfg.FormatDSN()
+	maskedPasswd := fmt.Sprintf("%s*pass*%s", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
+	maskedDSN := fmt.Sprintf("%s:%s@tcp(%s)/%s?%s", cfg.User, maskedPasswd, cfg.Addr, cfg.DBName, dsn[strings.Index(dsn, "?")+1:])
+	fmt.Printf("	DSN:		  \033[1;36;5m ➮ %s\033[0m\n", maskedDSN)
 
-    fmt.Println("\n * Opening database connection...")
-    db, err := sql.Open("mysql", dsn)
-    if err != nil {
-        fmt.Println("Error connecting:", err)
-        return nil, err
-    }
+	fmt.Println("\n * Opening database connection...")
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		fmt.Println("Error connecting:", err)
+		return nil, err
+	}
 
-    fmt.Println(" * Pinging DB...")
-    if err = db.Ping(); err != nil {
-        fmt.Printf("\033[31m	Error pinging database: %v\033[0m\n", err)
-        db.Close()
-        return nil, err
-    }
+	fmt.Println(" * Pinging DB...")
+	if err = db.Ping(); err != nil {
+		fmt.Printf("\033[31m	Error pinging database: %v\033[0m\n", err)
+		db.Close()
+		return nil, err
+	}
 
-    fmt.Println("\033[1;37;1m * Connecting to database to the address: ➮\033[1;94;1m", cfg.Addr, "\033[0m")
-    return db, nil
+	fmt.Println("\033[1;37;1m * Connecting to database to the address: ➮\033[1;94;1m", cfg.Addr, "\033[0m")
+	return db, nil
 }
 
+///* router
+func (app *App) InitializeRouter() *mux.Router {
+    r := mux.NewRouter()
+    // routes
+    r.HandleFunc("/", app.Home).Methods("GET")
+    r.HandleFunc("/users", app.HomeUsers).Methods("GET")
+    r.HandleFunc("/user", app.ShowUser).Methods("GET")
+    r.HandleFunc("/user", app.CreateUser).Methods("POST")
+    r.HandleFunc("/user/{id}", app.UpdateUser).Methods("PUT")
+    r.HandleFunc("/user/{id}", app.DeleteUser).Methods("DELETE")
+    r.HandleFunc("/pdf", app.GenerateTemplate).Methods("GET")
+    r.HandleFunc("/login", app.LoginHandler).Methods("POST")
+    r.HandleFunc("/signup", app.SignupHandler).Methods("POST")
+    r.HandleFunc("/logout", app.LogoutHandler).Methods("POST")
+    // health check
+    r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+        w.WriteHeader(http.StatusOK)
+        w.Write([]byte("API is running"))
+    }).Methods("GET")
+    return r
+}
 
+//* main entry point
 func main() {
-	// Open a database connection, retry if the connection fails
-	// for {
-	db, err := sql.Open("mysql", "damaris:damarisub@tcp(127.0.0.1:3306)/users")
-	if err != nil {
-		log.Printf("\033[1;31;1m * Failed to connect to the database: %v\033[0m", err)
-		// time.Sleep(1 * time.Second)
-		// continue
-		// }
-		// defer db.Close()
-		// break
-	}
-
-	//Initialize the logger
-	logger := log.New(os.Stdout, "INFO", log.Ldate|log.Ltime|log.Lshortfile)
-
-	//Create an instance of the App struct
-	app := &App{
-		DB:     db,
-		Logger: logger,
-	}
-
-	// Check if Db is initialized
-	if db == nil {
-		log.Fatalf("\033[1;31;1m * Failed to initialize the database connection.\033[0m")
-	}
-
-	// Create a new router
-	r := mux.NewRouter()
-
-	// Define your routes
-	r.HandleFunc("/", app.Home).Methods("GET")
-	r.HandleFunc("/users", app.HomeUsers).Methods("GET")
-	r.HandleFunc("/user", app.ShowUser).Methods("GET")
-	r.HandleFunc("/user", app.CreateUser).Methods("POST")
-	r.HandleFunc("/user/{id}", app.UpdateUser).Methods("PUT")
-	r.HandleFunc("/user/{id}", app.DeleteUser).Methods("DELETE")
-	r.HandleFunc("/pdf", app.GenerateTemplate).Methods("GET")
-	r.HandleFunc("/login", app.LoginHandler).Methods("POST")
-	r.HandleFunc("/signup", app.SignupHandler).Methods("POST")
-	r.HandleFunc("/logout", app.LogoutHandler).Methods("POST")
-
-	// Health check endpoint
-	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("API is running"))
-	}).Methods("GET")
-
-	// Start the HTTP server
-	app.Logger.Println("\n\033[1;37;1m * Starting the HTTP server on port:	  ➮\033[1;94;1m 8080\033[0m")
-	if err := http.ListenAndServe(":8080", r); err != nil {
-		log.Fatalf("\n * Failed to start HTTP server: %s\n", err)
-	}
+    var err error
+    app := &App{
+        Logger: log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile),
+    }
+    Db, err = app.ConnectToDatabase()
+    if err != nil {
+        app.Logger.Printf("\033[1;31;1m * Failed to connect to the database: %v\033[0m", err)
+        return
+    }
+    defer Db.Close()
+    if Db == nil {
+        app.Logger.Fatalf("\033[1;31;1m * Failed to initialize the database connection.\033[0m")
+    }
+    r := app.InitializeRouter()
+    app.Logger.Println("\n\033[1;37;1m * Starting the HTTP server on port: ➮\033[1;94;1m 8080\033[0m")
+    if err := http.ListenAndServe(":8080", r); err != nil {
+        app.Logger.Fatalf("\n * Failed to start HTTP server: %s\n", err)
+    }
 }

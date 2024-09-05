@@ -4,18 +4,18 @@ vars:
   url: http://localhost:8080
 
 testcases:
-- name: GetUsers
-  steps:
-  - type: http
-    method: GET
-    headers:
-       Accept: application/json
-       Content-Type: application/json
-    url: "{{.url}}/users"
-    assertions:
-    - result.statuscode ShouldEqual 200
-    - result.bodyjson ShouldBeArray
-    - result.bodyjson.users[0] ShouldContainKey ID
-    - result.bodyjson.users[0] ShouldContainKey Firstname
-    - result.bodyjson.users[0].ID ShouldBeNumber
-    - result.bodyjson.users[0].Firstname ShouldBeString
+  - name: GetUsers
+    steps:
+      - type: http
+        method: GET
+        headers:
+          Accept: application/json
+          Content-Type: application/json
+        url: "{{.url}}/users"
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.bodyjson ShouldBeArray
+          - result.bodyjson.users[0] ShouldContainKey ID
+          - result.bodyjson.users[0] ShouldContainKey Firstname
+          - result.bodyjson.users[0].ID ShouldBeNumber
+          - result.bodyjson.users[0].Firstname ShouldBeString

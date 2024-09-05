@@ -1,96 +1,99 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Users</title>
-    <link rel="stylesheet" href="../static/styles/users.css"> 
-</head>
-<body>
+    <link rel="stylesheet" href="../static/styles/users.css" />
+  </head>
+  <body>
+    <div class="table-container">
+      <input type="text" id="searchInput" placeholder="Search for users.." />
 
-<div class="table-container">
-    <input type="text" id="searchInput" placeholder="Search for users..">
+      <a href="/postform" class="add-button">ADD</a>
 
-    <a href="/postform" class="add-button">ADD</a> 
-
-    <table id="userTable">
+      <table id="userTable">
         <thead>
-            <tr>
-                <th>ID</th>
-                <th>Firstname</th>
-                <th>Lastname</th>
-                <th>Email</th>
-            </tr>
+          <tr>
+            <th>ID</th>
+            <th>Firstname</th>
+            <th>Lastname</th>
+            <th>Email</th>
+          </tr>
         </thead>
         <tbody>
-            {% for user in users %}
-            <tr>
-                <td>{{ user.ID }}</td>
-                <td>{{ user.Firstname }}</td>
-                <td>{{ user.Lastname }}</td>
-                <td>{{ user.Email }}</td>
-                <td>
-                    <button class="delete-button" data-user-id="{{user.ID}}">DELETE</button>
-                    <button class="update-button" data-user-id="{{user.ID}}">UPDATE</button>
-                </td>
-            </tr>
-            {% endfor %}
+          {% for user in users %}
+          <tr>
+            <td>{{ user.ID }}</td>
+            <td>{{ user.Firstname }}</td>
+            <td>{{ user.Lastname }}</td>
+            <td>{{ user.Email }}</td>
+            <td>
+              <input type="hidden" class="userId" value="{{ user.ID }}" />
+              <button onclick="deleteUser({{user.ID}})" id="delete-button">
+                DELETE
+              </button>
+              <button onclick="updateUser({{user.ID}})" id="update-button">
+                UPDATE
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
         </tbody>
-    </table>
+      </table>
 
-    <a href="/login" class="login-button">LOGIN</a>
-    <a href="/signup" class="signup-button">SIGNUP</a> 
-
-</div>
-</body>
-<script>
+      <a href="/login" class="login-button">LOGIN</a>
+      <a href="/signup" class="signup-button">SIGNUP</a>
+    </div>
+  </body>
+  <script>
     function updateUser(userId) {
-        fetch(`/user/${userId}`)
-        .then(res => {console.log(res)})
-        .catch(error => {console.log(error)})
+      fetch(`/user/${userId}`)
+        .then((res) => {
+          console.log(res);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     }
 
     function deleteUser(userId) {
-        fetch(`/user/${userId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+      fetch(`/user/${userId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return response.json();
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
+        .then((data) => {
+          if (data.success) {
+            alert("User deleted successfully");
+            window.location.reload();
+          } else {
+            throw new Error("User deletion failed");
+          }
         })
-        .then(data => {
-            if (data.success) {
-                alert("User deleted successfully");
-                window.location.reload();
-            } else {
-                throw new Error('User deletion failed');
-            }
-        })
-        .catch(error => {
-            alert("Error deleting user");
-            console.error('There was a problem with the fetch operation:', error.message);
+        .catch((error) => {
+          alert("Error deleting user");
+          console.error(
+            "There was a problem with the fetch operation:",
+            error.message,
+          );
         });
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.delete-button').forEach(button => {
-            button.addEventListener('click', function() {
-                const userId = this.getAttribute('data-user-id');
-                deleteUser(userId);
-            });
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll(".delete-button").forEach((button) => {
+        button.addEventListener("click", function () {
+          const userId = this.getAttribute("data-user-id");
+          deleteUser(userId);
         });
-
-        document.querySelectorAll('.update-button').forEach(button => {
-            button.addEventListener('click', function () {
-                const userId = this.getAttribute('data-user-id');
-                updateUser(userId);
-            });
-        });
+      });
     });
-</script>
+  </script>
 </html>
