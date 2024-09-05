@@ -234,12 +234,7 @@ func (app *App) ShowUser(w http.ResponseWriter, r *http.Request) {
 
 	var user User
 
-	row, err := app.DB.QueryRow("SELECT * FROM users WHERE id = ?", 1)
-	if err != nil {
-		app.Logger.Println("Error querying database: ", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	defer row.Close()
+	row := app.DB.QueryRow("SELECT * FROM users WHERE id = ?", 1)
 
 	if err := row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages); err != nil {
 		if err == sql.ErrNoRows {
@@ -381,23 +376,29 @@ func (app *App) GenerateTemplate(w http.ResponseWriter, r *http.Request) {
 	var template Template
 
 	// Get the path of the template
-	row1, err := app.DB.QueryRow("SELECT Path FROM template WHERE id = ?", idtemplate_int)
-	if err != nil {
-		app.Logger.Println("Error querying database: ", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	row1 := app.DB.QueryRow("SELECT Path FROM template WHERE id = ?", idtemplate_int)
+
+	if err := row1.Scan(&template.Path); err != nil {
+		if err == sql.ErrNoRows {
+			app.Logger.Println("Error scanning row: ", err)
+			http.NotFound(w, r)
+			return
+		}
+		http.Error(w, fmt.Sprintf("Error fetching user data: %v", err), http.StatusInternalServerError)
+		return
 	}
-	defer row1.Close()
 
-	row1.Scan(&template.Path)
+	row := app.DB.QueryRow("SELECT * FROM users WHERE id = ?", iduser_int)
 
-	row, err := app.DB.QueryRow("SELECT * FROM users WHERE id = ?", iduser_int)
-	if err != nil {
-		app.Logger.Println("Error querying database: ", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages); err != nil {
+		if err == sql.ErrNoRows {
+			app.Logger.Println("Error scanning row: ", err)
+			http.NotFound(w, r)
+			return
+		}
+		http.Error(w, fmt.Sprintf("Error fetching user data: %v", err), http.StatusInternalServerError)
+		return
 	}
-	defer row.Close()
-
-	row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
 
 	htmlContent, err := os.ReadFile(template.Path)
 	if err != nil {
