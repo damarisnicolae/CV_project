@@ -19,3 +19,53 @@ testcases:
           - result.bodyjson.users[0] ShouldContainKey Firstname
           - result.bodyjson.users[0].ID ShouldBeNumber
           - result.bodyjson.users[0].Firstname ShouldBeString
+  - name: CreateUser
+    steps:
+      - type: http
+        method: POST
+        url: "{{.url}}/user"
+        body: |
+          {
+            "Firstname": "Anne",
+            "Lastname": "Ungurean",
+            "Email": "anne.ungurean@yahoo.com"
+          }
+        headers:
+          Accept: application/json
+          Content-Type: application/json
+        assertions:
+          - result.statuscode ShouldEqual 201
+          - result.bodyjson ShouldContainKey ID
+          - result.bodyjson.ID ShouldBeNumber
+          - result.bodyjson.Firstname ShouldEqual Anne
+          - result.bodyjson.Email ShouldEqual "anne.ungurean@yahoo.com"
+  - name: UpdateUser
+    steps:
+      - type: http
+        method: PUT
+        url: "{{.url}}/user/1"
+        body: |
+          {
+            "Firstname": "Anne",
+            "Lastname": "Ungurean",
+            "Email": "anne.ungurean@yahoo.com"
+          }
+        headers:
+          Accept: application/json
+          Content-Type: application/json
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.bodyjson ShouldContainKey Firstname
+          - result.bodyjson.Firstname ShouldEqual Anne
+          - result.bodyjson.Lastname ShouldEqual Ungurean
+          - result.bodyjson.Email ShouldEqual "anne.ungurean@yahoo.com"
+  - name: DeleteUser
+    steps:
+      - type: http
+        method: DELETE
+        url: "{{.url}}/user/1"
+        headers:
+          Accept: application/json
+          Content-Type: application/json
+        assertions:
+          - result.statuscode ShouldEqual 204
