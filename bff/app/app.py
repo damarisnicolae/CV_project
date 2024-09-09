@@ -111,9 +111,15 @@ def signupuser():
         r = requests.post(f'http://{IP}:{PORT}/signup', request.form, headers=request.headers)
         return render_template('view/home.html')
     
-@app.route('/user/<int:id>', methods=['DELETE'])
-def delete_user(id):
-    url = f"http://{IP}:{PORT}/user/{id}"
+@app.route('/user', methods=['DELETE'])
+def delete_user():
+    user_id = request.args.get('id')
+
+    if not user_id:
+        app.logger.error("user id is missing")
+        return jsonify({'error': 'user id required'}), 400
+    
+    url = f"http://{IP}:{PORT}/user/{user_id}"
     app.logger.info(f"Sending DELETE request to {url}")
     try:
         response = requests.delete(url)
@@ -125,7 +131,7 @@ def delete_user(id):
     except requests.exceptions.RequestException as req_err:
         app.logger.error(f"Request error occurred: {req_err}")
         return jsonify({'error': 'User deletion failed', 'details': str(req_err)}), 500
-    return '', 204
+    return jsonify({'message': f'User {user_id} delete successfully'}), 200
 
 
 if __name__=='__main__': 

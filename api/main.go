@@ -324,7 +324,7 @@ func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.URL.Query().Get("id")
+	userID := r.URL.Query().Get("user_id")
 	if userID == "" {
 		http.NotFound(w, r)
 		return
