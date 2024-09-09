@@ -1,11 +1,9 @@
 # CV Management System API
 
-## Overview : _This project provides a platform for managing user data and generating custom CV templates._
+## Overview : This project provides a platform for managing user data and generating custom CV templates.
 
+![Description](https://venngage-wordpress.s3.amazonaws.com/uploads/2021/11/section-3-resume-banner-1-1.png)
 
-<a href="Link URL">
-  <img src="https://venngage-wordpress.s3.amazonaws.com/uploads/2021/11/section-3-resume-banner-1-1.png" alt="Alt Text" />
-</a>
 
 ```sh
 CV_project
@@ -39,22 +37,23 @@ CV_project
     └── __init__.py                     # Initialization and configuration
 ```
 
-## Components:
+## Components
 
+```plaintext
     Backend  (Go)           : Handles user data management, authentication, and PDF generation.
     Frontend (Python,Flask) : Provides the web interface for user interaction.
     Database (SQL)          : Stores user information.
 
-## Prerequisites:
+## Prerequisites
 
-- `Go                        `: _Backend development_
-- `Flask                     `: _Frontend development_
-- `MySQL database            `: _Storing user data and templates_
-- `wkhtmltopdf               `: _PDF generation_
-- `Git                       `: _Version control_
-- `Docker & Docker Compose   `: _Containerized deployment_
+- `Go`: _Backend development_
+- `Flask`: _Frontend development_
+- `MySQL database`: _Storing user data and templates_
+- `wkhtmltopdf`: _PDF generation_
+- `Git`: _Version control_
+- `Docker & Docker Compose`: _Containerized deployment_
 
-## Install Basic Tools:
+## Install Basic Tools
 
 ```sh
 sudo apt update && sudo apt upgrade && sudo apt install -y git curl build-essential golang-go python3 python3-pip wkhtmltopdf docker.io docker-compose selinux-utils curl mysql-server
@@ -162,12 +161,12 @@ docker-compose rm     # removes stopped service containers
 
 ## Browser links
 
-https://miro.com/app/board/uXjVK6HA_1A=/
+<https://miro.com/app/board/uXjVK6HA_1A=/>
 
-http://127.0.0.1:5000/template1
+<http://127.0.0.1:5000/template1>
 
-http://127.0.0.1:5000/template2
+<http://127.0.0.1:5000/template2>
 
-http://127.0.0.1:5000/template3
+<http://127.0.0.1:5000/template3>
 
-##
+---

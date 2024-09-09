@@ -1,7 +1,7 @@
 FROM golang:1.22-alpine AS builder
 
-ENV DB_HOST  db
-ENV DB_PORT  3306
+ENV MYSQL_HOST cv_db-container
+ENV MYSQL_PORT 3306
 
 WORKDIR /app
 

@@ -12,12 +12,11 @@ import (
 	"strconv"
 	"strings"
 
+	wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 	"golang.org/x/crypto/bcrypt"
-
-	wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 )
 
 type App struct {
@@ -84,6 +83,8 @@ func (app *App) SetSession(userName string, w http.ResponseWriter) {
 }
 
 func (app *App) LoginHandler(w http.ResponseWriter, r *http.Request) {
+	app.Logger.Println("Received request for /")
+
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -110,6 +111,7 @@ func (app *App) LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	app.Logger.Println("Received request for /")
 	//clear session
 	cookie := &http.Cookie{
 		Name:   "session",
@@ -124,9 +126,12 @@ func (app *App) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) SignupHandler(w http.ResponseWriter, r *http.Request) {
+	app.Logger.Println("Received request for /")
+
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.Logger.Println("Error parse form: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -144,8 +149,9 @@ func (app *App) SignupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = Db.Exec("INSERT INTO userlogin (username, password) VALUES (?,?)", email, hashedPassword)
+	_, err = app.DB.Exec("INSERT INTO userlogin (username, password) VALUES (?,?)", email, hashedPassword)
 	if err != nil {
+		app.Logger.Println("Error querying database: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -155,6 +161,8 @@ func (app *App) SignupHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) HomeUsers(w http.ResponseWriter, r *http.Request) {
+	app.Logger.Println("Received request for /")
+
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte("Method Not Allowed"))
@@ -164,7 +172,8 @@ func (app *App) HomeUsers(w http.ResponseWriter, r *http.Request) {
 	var users []User
 	rows, err := app.DB.Query("SELECT id, firstname, lastname, email FROM users")
 	if err != nil {
-		log.Fatal(err)
+		app.Logger.Println("Error querying database: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	defer rows.Close()
 
@@ -172,7 +181,8 @@ func (app *App) HomeUsers(w http.ResponseWriter, r *http.Request) {
 		var user User
 		err := rows.Scan(&user.ID, &user.Firstname, &user.Lastname, &user.Email)
 		if err != nil {
-			log.Fatal(err)
+			app.Logger.Println("Error scanning row: ", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		users = append(users, user)
 	}
@@ -214,6 +224,8 @@ func (app *App) Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) ShowUser(w http.ResponseWriter, r *http.Request) {
+	app.Logger.Println("Received request for /")
+
 	if r.Method != "GET" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method Not Allowed"))
@@ -221,9 +233,12 @@ func (app *App) ShowUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user User
+
 	row := app.DB.QueryRow("SELECT * FROM users WHERE id = ?", 1)
+
 	if err := row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages); err != nil {
 		if err == sql.ErrNoRows {
+			app.Logger.Println("Error scanning row: ", err)
 			http.NotFound(w, r)
 			return
 		}
@@ -236,6 +251,8 @@ func (app *App) ShowUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
+	app.Logger.Println("Received request for /")
+
 	if r.Method != "POST" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method Not Allowed"))
@@ -249,9 +266,10 @@ func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Insert the user into the database
-	_, err := Db.Exec("INSERT INTO users (Jobtitle, Firstname, Lastname, Email, Phone, Address, City, Country, Postalcode, Dateofbirth, Nationality, Summary, Workexperience, Education, Skills, Languages) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	_, err := app.DB.Exec("INSERT INTO users (Jobtitle, Firstname, Lastname, Email, Phone, Address, City, Country, Postalcode, Dateofbirth, Nationality, Summary, Workexperience, Education, Skills, Languages) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		user.Jobtitle, user.Firstname, user.Lastname, user.Email, user.Phone, user.Address, user.City, user.Country, user.Postalcode, user.Dateofbirth, user.Nationality, user.Summary, user.Workexperience, user.Education, user.Skills, user.Languages)
 	if err != nil {
+		app.Logger.Println("Error querying database: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -261,6 +279,8 @@ func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	app.Logger.Println("Received request for /")
+
 	if r.Method != "PUT" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method Not Allowed"))
@@ -281,9 +301,10 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the user exists
-	_, err = Db.Exec("UPDATE users SET jobtitle=?, first_name=?, last_name=?, email=?, phone=?, address=?, city=?, country=?, postal_code=?, date_of_birth=?, nationality=?, summary=?, work_experience=?, education=?, skills=?, languages=? WHERE id=?",
+	_, err = app.DB.Exec("UPDATE users SET jobtitle=?, first_name=?, last_name=?, email=?, phone=?, address=?, city=?, country=?, postal_code=?, date_of_birth=?, nationality=?, summary=?, work_experience=?, education=?, skills=?, languages=? WHERE id=?",
 		user.Jobtitle, user.Firstname, user.Lastname, user.Email, user.Phone, user.Address, user.City, user.Country, user.Postalcode, user.Dateofbirth, user.Nationality, user.Summary, user.Workexperience, user.Education, user.Skills, user.Languages, id)
 	if err != nil {
+		app.Logger.Println("Error querying database: ", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -295,6 +316,8 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	app.Logger.Println("Received request for /")
+
 	if r.Method != "DELETE" {
 		w.WriteHeader(405)
 		w.Write([]byte("Method Not Allowed"))
@@ -314,10 +337,10 @@ func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stmt, err := Db.Prepare("DELETE FROM users WHERE id = ?")
+	stmt, err := app.DB.Prepare("DELETE FROM users WHERE id = ?")
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Error preparing delete statement: %v", err)
+		app.Logger.Println("Error querying database: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer stmt.Close()
@@ -333,6 +356,8 @@ func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) GenerateTemplate(w http.ResponseWriter, r *http.Request) {
+	app.Logger.Println("Received request for /")
+
 	query := r.URL.Query()
 	template_id := query["template"]
 	user_id := query["user"]
@@ -351,10 +376,29 @@ func (app *App) GenerateTemplate(w http.ResponseWriter, r *http.Request) {
 	var template Template
 
 	// Get the path of the template
-	row1 := Db.QueryRow("SELECT Path FROM template WHERE id = ?", idtemplate_int)
-	row1.Scan(&template.Path)
-	row := Db.QueryRow("SELECT * FROM users WHERE id = ?", iduser_int)
-	row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
+	row1 := app.DB.QueryRow("SELECT Path FROM template WHERE id = ?", idtemplate_int)
+
+	if err := row1.Scan(&template.Path); err != nil {
+		if err == sql.ErrNoRows {
+			app.Logger.Println("Error scanning row: ", err)
+			http.NotFound(w, r)
+			return
+		}
+		http.Error(w, fmt.Sprintf("Error fetching user data: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	row := app.DB.QueryRow("SELECT * FROM users WHERE id = ?", iduser_int)
+
+	if err := row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages); err != nil {
+		if err == sql.ErrNoRows {
+			app.Logger.Println("Error scanning row: ", err)
+			http.NotFound(w, r)
+			return
+		}
+		http.Error(w, fmt.Sprintf("Error fetching user data: %v", err), http.StatusInternalServerError)
+		return
+	}
 
 	htmlContent, err := os.ReadFile(template.Path)
 	if err != nil {
@@ -411,7 +455,7 @@ func (app *App) GenerateTemplate(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s, %s", template_id, user_id)
 }
 
-// * Get the value of an environment variable or return a default value
+// * get environment variables
 func (app *App) GetEnv(key, fallback string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
@@ -419,7 +463,7 @@ func (app *App) GetEnv(key, fallback string) string {
 	return fallback
 }
 
-// ? Connection to the database
+// * connection to the database
 func (app *App) ConnectToDatabase() (*sql.DB, error) {
 	getEnv := func(key, fallback string) string {
 		if value, exists := os.LookupEnv(key); exists {
@@ -467,37 +511,10 @@ func (app *App) ConnectToDatabase() (*sql.DB, error) {
 	return db, nil
 }
 
-func main() {
-	// Open a database connection, retry if the connection fails
-	// for {
-	db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/users")
-	if err != nil {
-		log.Printf("\033[1;31;1m * Failed to connect to the database: %v\033[0m", err)
-		// time.Sleep(1 * time.Second)
-		// continue
-		// }
-		// defer db.Close()
-		// break
-	}
-
-	//Initialize the logger
-	logger := log.New(os.Stdout, "INFO", log.Ldate|log.Ltime|log.Lshortfile)
-
-	//Create an instance of the App struct
-	app := &App{
-		DB:     db,
-		Logger: logger,
-	}
-
-	// Check if Db is initialized
-	if db == nil {
-		log.Fatalf("\033[1;31;1m * Failed to initialize the database connection.\033[0m")
-	}
-
-	// Create a new router
+// /* router
+func (app *App) InitializeRouter() *mux.Router {
 	r := mux.NewRouter()
-
-	// Define your routes
+	// routes
 	r.HandleFunc("/", app.Home).Methods("GET")
 	r.HandleFunc("/users", app.HomeUsers).Methods("GET")
 	r.HandleFunc("/user", app.ShowUser).Methods("GET")
@@ -508,16 +525,32 @@ func main() {
 	r.HandleFunc("/login", app.LoginHandler).Methods("POST")
 	r.HandleFunc("/signup", app.SignupHandler).Methods("POST")
 	r.HandleFunc("/logout", app.LogoutHandler).Methods("POST")
-
-	// Health check endpoint
+	// health check
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("API is running"))
 	}).Methods("GET")
+	return r
+}
 
-	// Start the HTTP server
-	app.Logger.Println("\n\033[1;37;1m * Starting the HTTP server on port:	  ➮\033[1;94;1m 8080\033[0m")
+// * main entry point
+func main() {
+	var err error
+	app := &App{
+		Logger: log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile),
+	}
+	Db, err = app.ConnectToDatabase()
+	if err != nil {
+		app.Logger.Printf("\033[1;31;1m * Failed to connect to the database: %v\033[0m", err)
+		return
+	}
+	defer Db.Close()
+	if Db == nil {
+		app.Logger.Fatalf("\033[1;31;1m * Failed to initialize the database connection.\033[0m")
+	}
+	r := app.InitializeRouter()
+	app.Logger.Println("\n\033[1;37;1m * Starting the HTTP server on port: ➮\033[1;94;1m 8080\033[0m")
 	if err := http.ListenAndServe(":8080", r); err != nil {
-		log.Fatalf("\n * Failed to start HTTP server: %s\n", err)
+		app.Logger.Fatalf("\n * Failed to start HTTP server: %s\n", err)
 	}
 }

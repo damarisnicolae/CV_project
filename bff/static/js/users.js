@@ -17,16 +17,19 @@ function deleteUser(userId) {
         }
         return response.json();
     })
-    .then(data => {
-        if (data.success) {
-            alert("User deleted successfully");
-            window.location.reload();
-        } else {
-            throw new Error('User deletion failed');
-        }
+    .then((data) => {
+      if (data.success) {
+        alert('User deleted successfully')
+        window.location.reload()
+      } else {
+        throw new Error('User deletion failed')
+      }
     })
-    .catch(error => {
-        alert("Error deleting user");
-        console.error('There was a problem with the fetch operation:', error.message);
-    });
+    .catch((error) => {
+      alert('Error deleting user')
+      console.error(
+        'There was a problem with the fetch operation:',
+        error.message
+      )
+    })
 }
