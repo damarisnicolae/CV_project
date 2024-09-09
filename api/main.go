@@ -162,7 +162,7 @@ func (app *App) HomeUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var users []User
-	rows, err := Db.Query("SELECT id, firstname, lastname, email FROM users")
+	rows, err := app.DB.Query("SELECT id, firstname, lastname, email FROM users")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -181,60 +181,59 @@ func (app *App) HomeUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) Home(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodGet {
-        http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-        return
-    }
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-    app.Logger.Println("Received request for /")
+	app.Logger.Println("Received request for /")
 
-    rows, err := app.DB.Query("SELECT id, jobtitle, firstname, lastname, email, phone, address, city, country, postalcode, dateofbirth, nationality, summary, workexperience, education, skills, languages FROM users")
-    if err != nil {
-        app.Logger.Println("Error querying database: ", err)
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
-    defer rows.Close()
+	rows, err := app.DB.Query("SELECT id, jobtitle, firstname, lastname, email, phone, address, city, country, postalcode, dateofbirth, nationality, summary, workexperience, education, skills, languages FROM users")
+	if err != nil {
+		app.Logger.Println("Error querying database: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
 
-    var users []User
+	var users []User
 
-    for rows.Next() {
-        var user User
-        err := rows.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
-        if err != nil {
-            app.Logger.Println("Error scanning row: ", err)
-            http.Error(w, err.Error(), http.StatusInternalServerError)
-            return
-        }
-        users = append(users, user)
-    }
+	for rows.Next() {
+		var user User
+		err := rows.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages)
+		if err != nil {
+			app.Logger.Println("Error scanning row: ", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		users = append(users, user)
+	}
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(users)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
 }
 
 func (app *App) ShowUser(w http.ResponseWriter, r *http.Request) {
-    if r.Method != "GET" {
-        w.WriteHeader(405)
-        w.Write([]byte("Method Not Allowed"))
-        return
-    }
+	if r.Method != "GET" {
+		w.WriteHeader(405)
+		w.Write([]byte("Method Not Allowed"))
+		return
+	}
 
-    var user User
-    row := app.DB.QueryRow("SELECT * FROM users WHERE id = ?", 1)
-    if err := row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages); err != nil {
-        if err == sql.ErrNoRows {
-            http.NotFound(w, r)
-            return
-        }
-        http.Error(w, fmt.Sprintf("Error fetching user data: %v", err), http.StatusInternalServerError)
-        return
-    }
+	var user User
+	row := app.DB.QueryRow("SELECT * FROM users WHERE id = ?", 1)
+	if err := row.Scan(&user.ID, &user.Jobtitle, &user.Firstname, &user.Lastname, &user.Email, &user.Phone, &user.Address, &user.City, &user.Country, &user.Postalcode, &user.Dateofbirth, &user.Nationality, &user.Summary, &user.Workexperience, &user.Education, &user.Skills, &user.Languages); err != nil {
+		if err == sql.ErrNoRows {
+			http.NotFound(w, r)
+			return
+		}
+		http.Error(w, fmt.Sprintf("Error fetching user data: %v", err), http.StatusInternalServerError)
+		return
+	}
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(user)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
 }
-
 
 func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
@@ -422,57 +421,56 @@ func (app *App) GetEnv(key, fallback string) string {
 
 // ? Connection to the database
 func (app *App) ConnectToDatabase() (*sql.DB, error) {
-    getEnv := func(key, fallback string) string {
-        if value, exists := os.LookupEnv(key); exists {
-            return value
-        }
-        return fallback
-    }
+	getEnv := func(key, fallback string) string {
+		if value, exists := os.LookupEnv(key); exists {
+			return value
+		}
+		return fallback
+	}
 
-    cfg := mysql.Config{
-        User:                 getEnv("MYSQL_USER", getEnv("MYSQL_ROOT_USER", "")),
-        Passwd:               getEnv("MYSQL_PASSWORD", getEnv("MYSQL_ROOT_PASSWORD", "")),
-        Net:                  "tcp",
-        Addr:                 getEnv("MYSQL_HOST", "localhost") + ":" + getEnv("MYSQL_PORT", "3306"),
-        DBName:               getEnv("MYSQL_DATABASE", ""),
-        AllowNativePasswords: true,
-    }
+	cfg := mysql.Config{
+		User:                 getEnv("MYSQL_USER", getEnv("MYSQL_ROOT_USER", "")),
+		Passwd:               getEnv("MYSQL_PASSWORD", getEnv("MYSQL_ROOT_PASSWORD", "")),
+		Net:                  "tcp",
+		Addr:                 getEnv("MYSQL_HOST", "localhost") + ":" + getEnv("MYSQL_PORT", "3306"),
+		DBName:               getEnv("MYSQL_DATABASE", ""),
+		AllowNativePasswords: true,
+	}
 
-    fmt.Println("\n\033[1;34;1m * * * Establishing connection to the database...")
-    fmt.Printf("\n\033[1;37;1m * Environment variables print from \033[1;36;1mmain.go:\n\n\033[1;36;1m")
-    fmt.Printf("	User:		   ➮ %s \n", cfg.User)
-    fmt.Printf("	Password:	   ➮ %s*pass*%s \n", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
-    fmt.Printf("	Address:	   ➮ %s \n", cfg.Addr)
-    fmt.Printf("	Database Name:     ➮ %s \n\n", cfg.DBName)
+	fmt.Println("\n\033[1;34;1m * * * Establishing connection to the database...")
+	fmt.Printf("\n\033[1;37;1m * Environment variables print from \033[1;36;1mmain.go:\n\n\033[1;36;1m")
+	fmt.Printf("	User:		   ➮ %s \n", cfg.User)
+	fmt.Printf("	Password:	   ➮ %s*pass*%s \n", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
+	fmt.Printf("	Address:	   ➮ %s \n", cfg.Addr)
+	fmt.Printf("	Database Name:     ➮ %s \n\n", cfg.DBName)
 
-    dsn := cfg.FormatDSN()
-    maskedPasswd := fmt.Sprintf("%s*pass*%s", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
-    maskedDSN := fmt.Sprintf("%s:%s@tcp(%s)/%s?%s", cfg.User, maskedPasswd, cfg.Addr, cfg.DBName, dsn[strings.Index(dsn, "?")+1:])
-    fmt.Printf("	DSN:		  \033[1;36;5m ➮ %s\033[0m\n", maskedDSN)
+	dsn := cfg.FormatDSN()
+	maskedPasswd := fmt.Sprintf("%s*pass*%s", string(cfg.Passwd[0]), string(cfg.Passwd[len(cfg.Passwd)-1]))
+	maskedDSN := fmt.Sprintf("%s:%s@tcp(%s)/%s?%s", cfg.User, maskedPasswd, cfg.Addr, cfg.DBName, dsn[strings.Index(dsn, "?")+1:])
+	fmt.Printf("	DSN:		  \033[1;36;5m ➮ %s\033[0m\n", maskedDSN)
 
-    fmt.Println("\n * Opening database connection...")
-    db, err := sql.Open("mysql", dsn)
-    if err != nil {
-        fmt.Println("Error connecting:", err)
-        return nil, err
-    }
+	fmt.Println("\n * Opening database connection...")
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		fmt.Println("Error connecting:", err)
+		return nil, err
+	}
 
-    fmt.Println(" * Pinging DB...")
-    if err = db.Ping(); err != nil {
-        fmt.Printf("\033[31m	Error pinging database: %v\033[0m\n", err)
-        db.Close()
-        return nil, err
-    }
+	fmt.Println(" * Pinging DB...")
+	if err = db.Ping(); err != nil {
+		fmt.Printf("\033[31m	Error pinging database: %v\033[0m\n", err)
+		db.Close()
+		return nil, err
+	}
 
-    fmt.Println("\033[1;37;1m * Connecting to database to the address: ➮\033[1;94;1m", cfg.Addr, "\033[0m")
-    return db, nil
+	fmt.Println("\033[1;37;1m * Connecting to database to the address: ➮\033[1;94;1m", cfg.Addr, "\033[0m")
+	return db, nil
 }
-
 
 func main() {
 	// Open a database connection, retry if the connection fails
 	// for {
-	db, err := sql.Open("mysql", "damaris:damarisub@tcp(127.0.0.1:3306)/users")
+	db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/users")
 	if err != nil {
 		log.Printf("\033[1;31;1m * Failed to connect to the database: %v\033[0m", err)
 		// time.Sleep(1 * time.Second)

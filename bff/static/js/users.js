@@ -1,5 +1,11 @@
+function updateUser(userId) {
+    fetch(`/user/${userId}`)
+    .then(res => {console.log(res)})
+    .catch(error => {console.log(error)});
+}
+
 function deleteUser(userId) {
-    fetch(`/user/${userId}`, {
+    fetch(`/user?id=${userId}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json'
@@ -24,10 +30,3 @@ function deleteUser(userId) {
         console.error('There was a problem with the fetch operation:', error.message);
     });
 }
-
-document.querySelectorAll('.delete-button').forEach(button => {
-    button.addEventListener('click', function() {
-        const userId = this.getAttribute('data-user-id');
-        deleteUser(userId);
-    });
-});

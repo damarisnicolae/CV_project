@@ -30,8 +30,8 @@
                 <td>{{ user.Lastname }}</td>
                 <td>{{ user.Email }}</td>
                 <td>
-                    <button class="delete-button" data-user-id="{{user.ID}}">DELETE</button>
-                    <button class="update-button" data-user-id="{{user.ID}}">UPDATE</button>
+                    <button onclick="updateUser('{{ user.ID }}')">UPDATE</button>
+                    <button onclick="deleteUser('{{ user.ID }}')">DELETE</button>
                 </td>
             </tr>
             {% endfor %}
@@ -42,55 +42,6 @@
     <a href="/signup" class="signup-button">SIGNUP</a> 
 
 </div>
+<script src="../static/js/users.js"></script>
 </body>
-<script>
-    function updateUser(userId) {
-        fetch(`/user/${userId}`)
-        .then(res => {console.log(res)})
-        .catch(error => {console.log(error)})
-    }
-
-    function deleteUser(userId) {
-        fetch(`/user/${userId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                alert("User deleted successfully");
-                window.location.reload();
-            } else {
-                throw new Error('User deletion failed');
-            }
-        })
-        .catch(error => {
-            alert("Error deleting user");
-            console.error('There was a problem with the fetch operation:', error.message);
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.delete-button').forEach(button => {
-            button.addEventListener('click', function() {
-                const userId = this.getAttribute('data-user-id');
-                deleteUser(userId);
-            });
-        });
-
-        document.querySelectorAll('.update-button').forEach(button => {
-            button.addEventListener('click', function () {
-                const userId = this.getAttribute('data-user-id');
-                updateUser(userId);
-            });
-        });
-    });
-</script>
 </html>
