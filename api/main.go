@@ -24,8 +24,6 @@ type App struct {
 	Logger *log.Logger
 }
 
-var Db *sql.DB
-
 type User struct {
 	ID             int64
 	Jobtitle       string
@@ -58,7 +56,7 @@ var CookieHandler = securecookie.New(
 
 func (app *App) VerifyLogin(username, password string) bool {
 	var hashedPassword string
-	err := Db.QueryRow("SELECT password FROM userlogin WHERE username = ?", username).Scan(&hashedPassword)
+	err := app.DB.QueryRow("SELECT password FROM userlogin WHERE username = ?", username).Scan(&hashedPassword)
 	if err != nil {
 		return false
 	}
@@ -83,7 +81,7 @@ func (app *App) SetSession(userName string, w http.ResponseWriter) {
 }
 
 func (app *App) LoginHandler(w http.ResponseWriter, r *http.Request) {
-	app.Logger.Println("Received request for /")
+	app.Logger.Println("Received request for /login")
 
 	err := r.ParseForm()
 	if err != nil {
@@ -111,7 +109,7 @@ func (app *App) LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	app.Logger.Println("Received request for /")
+	app.Logger.Println("Received request for /logout")
 	//clear session
 	cookie := &http.Cookie{
 		Name:   "session",
@@ -126,7 +124,7 @@ func (app *App) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) SignupHandler(w http.ResponseWriter, r *http.Request) {
-	app.Logger.Println("Received request for /")
+	app.Logger.Println("Received request for /signup")
 
 	err := r.ParseForm()
 	if err != nil {
@@ -161,7 +159,7 @@ func (app *App) SignupHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) HomeUsers(w http.ResponseWriter, r *http.Request) {
-	app.Logger.Println("Received request for /")
+	app.Logger.Println("Received request for /users")
 
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -224,7 +222,7 @@ func (app *App) Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) ShowUser(w http.ResponseWriter, r *http.Request) {
-	app.Logger.Println("Received request for /")
+	app.Logger.Println("Received request for /user, method: GET")
 
 	if r.Method != "GET" {
 		w.WriteHeader(405)
@@ -251,7 +249,7 @@ func (app *App) ShowUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
-	app.Logger.Println("Received request for /")
+	app.Logger.Println("Received request for /user, method: POST")
 
 	if r.Method != "POST" {
 		w.WriteHeader(405)
@@ -279,7 +277,7 @@ func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
-	app.Logger.Println("Received request for /")
+	app.Logger.Println("Received request for /user/{id}, method: PUT")
 
 	if r.Method != "PUT" {
 		w.WriteHeader(405)
@@ -316,7 +314,7 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	app.Logger.Println("Received request for /")
+	app.Logger.Println("Received request for /user/{id}, method: DELETE")
 
 	if r.Method != "DELETE" {
 		w.WriteHeader(405)
@@ -356,7 +354,7 @@ func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) GenerateTemplate(w http.ResponseWriter, r *http.Request) {
-	app.Logger.Println("Received request for /")
+	app.Logger.Println("Received request for /pdf")
 
 	query := r.URL.Query()
 	template_id := query["template"]
@@ -464,7 +462,7 @@ func (app *App) GetEnv(key, fallback string) string {
 }
 
 // * connection to the database
-func (app *App) ConnectToDatabase() (*sql.DB, error) {
+func ConnectToDatabases() (*sql.DB, error) {
 	getEnv := func(key, fallback string) string {
 		if value, exists := os.LookupEnv(key); exists {
 			return value
@@ -536,21 +534,31 @@ func (app *App) InitializeRouter() *mux.Router {
 // * main entry point
 func main() {
 	var err error
-	app := &App{
-		Logger: log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile),
-	}
-	Db, err = app.ConnectToDatabase()
+
+	Db, err := ConnectToDatabases()
 	if err != nil {
-		app.Logger.Printf("\033[1;31;1m * Failed to connect to the database: %v\033[0m", err)
+		log.Printf("\033[1;31;1m * Failed to connect to the database: %v\033[0m", err)
 		return
 	}
 	defer Db.Close()
+
 	if Db == nil {
-		app.Logger.Fatalf("\033[1;31;1m * Failed to initialize the database connection.\033[0m")
+		log.Fatalf("\033[1;31;1m * Failed to initialize the database connection.\033[0m")
 	}
+
+	app := &App{
+		DB:     Db,
+		Logger: log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile),
+	}
+
 	r := app.InitializeRouter()
+
 	app.Logger.Println("\n\033[1;37;1m * Starting the HTTP server on port: ➮\033[1;94;1m 8080\033[0m")
 	if err := http.ListenAndServe(":8080", r); err != nil {
 		app.Logger.Fatalf("\n * Failed to start HTTP server: %s\n", err)
 	}
+}
+
+func ConnectToDatabase() {
+	panic("unimplemented")
 }
