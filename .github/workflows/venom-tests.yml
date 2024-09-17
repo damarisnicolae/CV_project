@@ -34,7 +34,6 @@ jobs:
           curl https://github.com/ovh/venom/releases/download/v1.0.1/venom.linux-amd64 -L -o /usr/local/bin/venom
           chmod +x /usr/local/bin/venom
       - name: run e2e tests
-        run: /usr/local/bin/venom run #TODO: add venom file path
-        working-directory: ./api/tests
+        run: venom run api/e2etests.yaml
       - name: stop docker compose
         run: docker-compose down
