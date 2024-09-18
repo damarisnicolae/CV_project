@@ -1,4 +1,4 @@
-from flask import Flask, abort, jsonify, render_template, request
+from flask import Flask, abort, jsonify, render_template, send_from_directory, request
 import requests, json, argparse, os
 
 print("Start")
@@ -14,7 +14,6 @@ PORT = args["port"]
 # value = os.getenv('API_IP')
 
 app = Flask(__name__, template_folder='../templates')
-
 
 @app.route('/', methods=['GET'])
 def home():
@@ -133,6 +132,13 @@ def delete_user():
         return jsonify({'error': 'User deletion failed', 'details': str(req_err)}), 500
     return jsonify({'message': f'User {user_id} delete successfully'}), 200
 
+@app.route('/styles/<path:filename>')
+def serve_css(filename):
+    return send_from_directory(os.path.join(app.root_path, '../static/styles'), filename)
+
+@app.route('/js/<path:filename>')
+def serve_js(filename):
+    return send_from_directory(os.path.join(app.root_path, '../static/js'), filename)
 
 if __name__=='__main__': 
     app.run(host='0.0.0.0', port=5000, debug=True)
