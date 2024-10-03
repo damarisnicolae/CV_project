@@ -11,17 +11,20 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	wkhtml "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
+	"github.com/gorilla/sessions"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type App struct {
-	DB     *sql.DB
-	Logger *log.Logger
+	DB      *sql.DB
+	Logger  *log.Logger
+	session *sessions.Session
 }
 
 type User struct {
@@ -49,10 +52,48 @@ type Template struct {
 	Path string
 }
 
+var sessionStore = make(map[string]string)
+
 var CookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(64), // this key is used for signing
 	securecookie.GenerateRandomKey(32), // this key is used for encryption
 )
+
+func (app *App) IsAuthenticated(r *http.Request) (bool, string) {
+
+	cookie, err := r.Cookie("session") // get the session cookie from the request
+	if err != nil {
+		return false, ""
+	}
+
+	var sessionData map[string]string
+	if err := CookieHandler.Decode("session", cookie.Value, &sessionData); err != nil { // decode the session ID from the cookie
+		return false, ""
+	}
+
+	sessionID, ok := sessionData["id"] // get session ID from the decoded cookie value
+	if !ok {
+		return false, ""
+	}
+
+	userName, exists := sessionStore[sessionID] // // check if the session ID exists in the session store
+	if !exists {
+		return false, ""
+	}
+
+	return true, userName
+}
+
+func (app *App) requireAuthentication(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		auth, userName := app.IsAuthenticated(r)
+		if !auth {
+			http.Redirect(w, r, "/login", 302)
+			return
+		}
+		fmt.Fprintf(w, "Welcome, %s! You are authenticated.", userName)
+	})
+}
 
 func (app *App) VerifyLogin(username, password string) bool {
 	var hashedPassword string
@@ -65,19 +106,27 @@ func (app *App) VerifyLogin(username, password string) bool {
 	return err == nil
 }
 
+var cookieStore = sessions.NewCookieStore([]byte("secret-key"))
+
 func (app *App) SetSession(userName string, w http.ResponseWriter) {
-	value := map[string]string{
-		"name": userName,
+
+	sessionID := fmt.Sprintf("%d", time.Now().UnixNano()) // Generate a session ID
+	sessionStore[sessionID] = userName
+
+	encoded, err := CookieHandler.Encode("session", map[string]string{"id": sessionID})
+	if err != nil {
+		http.Error(w, "Failed to encode session cookie", http.StatusInternalServerError)
+		log.Printf("Error encoding session cookie: %v", err)
+		return
 	}
 
-	if encoded, err := CookieHandler.Encode("session", value); err == nil {
-		cookie := &http.Cookie{
-			Name:  "session",
-			Value: encoded,
-			Path:  "/",
-		}
-		http.SetCookie(w, cookie)
+	cookie := &http.Cookie{
+		Name:  "session",
+		Value: encoded,
+		Path:  "/",
 	}
+
+	http.SetCookie(w, cookie)
 }
 
 func (app *App) LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -185,6 +234,7 @@ func (app *App) HomeUsers(w http.ResponseWriter, r *http.Request) {
 		users = append(users, user)
 	}
 	w.Header().Set("Content-Type", "application/json")
+	// returnare statuscode
 	json.NewEncoder(w).Encode(users)
 }
 
@@ -513,7 +563,7 @@ func ConnectToDatabases() (*sql.DB, error) {
 func (app *App) InitializeRouter() *mux.Router {
 	r := mux.NewRouter()
 	// routes
-	r.HandleFunc("/", app.Home).Methods("GET")
+	r.HandleFunc("/", app.session.Enable(app.requireAuthentication(http.HandlerFunc(app.Home)))).Methods("GET")
 	r.HandleFunc("/users", app.HomeUsers).Methods("GET")
 	r.HandleFunc("/user", app.ShowUser).Methods("GET")
 	r.HandleFunc("/user", app.CreateUser).Methods("POST")
@@ -546,9 +596,14 @@ func main() {
 		log.Fatalf("\033[1;31;1m * Failed to initialize the database connection.\033[0m")
 	}
 
+	session := sessions.New([]byte("session_secret"))
+	session.Lifetime = 12 * time.Hour
+	session.Secure = true
+
 	app := &App{
-		DB:     Db,
-		Logger: log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile),
+		DB:      Db,
+		Logger:  log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile),
+		session: session,
 	}
 
 	r := app.InitializeRouter()
